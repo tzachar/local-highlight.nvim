@@ -72,7 +72,6 @@ function M.highlight_usages(bufnr)
 
   -- dumb find all matches of the node
   -- matching whole word ('\<' and '\>')
-  dump(vim.treesitter.query.get_node_text(node_at_point, bufnr))
   local curpattern = string.format([[\V\<%s\>]], vim.treesitter.query.get_node_text(node_at_point, bufnr))
   local status, regex = pcall(vim.regex, curpattern)
   if not status then
@@ -85,7 +84,7 @@ function M.highlight_usages(bufnr)
       local matches = all_matches(regex, lines[1])
       if matches and #matches > 0 then
         for _, col in ipairs(matches) do
-          local node = get_node_at_position(row, col, true)
+          local node = get_node_at_position(row, col, false)
           if node and node ~= node_at_point and node:type() ~= 'comment' then
             ts_utils.highlight_node(node, bufnr, usage_namespace, "TSDefinitionUsage")
           end
