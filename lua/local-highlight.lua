@@ -8,19 +8,18 @@ local M = {
 }
 
 local usage_namespace = api.nvim_create_namespace("highlight_usages_in_window")
-local last_nodes = {}
+local last_cache = {}
 
-local function all_matches(regex, line)
+local function all_matches(bufnr, regex, line)
   local ans = {}
   local offset = 0
-  while #line > 0 do
-    local s, e = regex:match_str(line)
+  while true do
+    local s, e = regex:match_line(bufnr, line, offset)
     if not s then
       return ans
     end
     table.insert(ans, s + offset)
     offset = offset + e
-    line = line:sub(e + 1)
   end
 end
 
@@ -51,24 +50,28 @@ function M.highlight_usages(bufnr)
     return
   end
   local topline, botline = vim.fn.line('w0') - 1, vim.fn.line('w$')
-  -- Don't calculate usages again if we are on the same node.
-  if (last_nodes[bufnr]
-      and curword == last_nodes[bufnr].curword
-      and topline == last_nodes[bufnr].topline
-      and botline == last_nodes[bufnr].botline
+  -- Don't calculate usages again if we are on the same word.
+  if (last_cache[bufnr]
+      and curword == last_cache[bufnr].curword
+      and topline == last_cache[bufnr].topline
+      and botline == last_cache[bufnr].botline
+      and cursor[1] == last_cache[bufnr].row
+      and cursor[2] == last_cache[bufnr].col
       and M.has_highlights(bufnr)) then
     return
   else
-      last_nodes[bufnr] = {
+      last_cache[bufnr] = {
         curword = curword,
         topline = topline,
         botline = botline,
+        row = cursor[1],
+        col = cursor[2],
       }
   end
 
   M.clear_usage_highlights(bufnr)
 
-  -- dumb find all matches of the node
+  -- dumb find all matches of the word
   -- matching whole word ('\<' and '\>')
   local cursor_range = { cursor[1] - 1, cursor[2] }
   local curpattern = string.format([[\V\<%s\>]], curword)
@@ -78,25 +81,24 @@ function M.highlight_usages(bufnr)
     return
   end
 
-  for row=topline, botline do
-    local lines = api.nvim_buf_get_lines(bufnr, row, row + 1, false)
-    if #lines > 0 then
-      local matches = all_matches(regex, lines[1])
-      if matches and #matches > 0 then
-        for _, col in ipairs(matches) do
-          if row ~= cursor_range[1] or cursor_range[2] < col or cursor_range[2] > col + curpattern_len then
-            vim.highlight.range(
-              bufnr,
-              usage_namespace,
-              'TSDefinitionUsage',
-              { row, col },
-              { row, col + curpattern_len }
-            )
-          end
+  -- local start = vim.fn.reltime()
+  for row=topline, botline - 1 do
+    local matches = all_matches(bufnr, regex, row)
+    if matches and #matches > 0 then
+      for _, col in ipairs(matches) do
+        if row ~= cursor_range[1] or cursor_range[2] < col or cursor_range[2] > col + curpattern_len then
+          vim.highlight.range(
+            bufnr,
+            usage_namespace,
+            'TSDefinitionUsage',
+            { row, col },
+            { row, col + curpattern_len }
+          )
         end
       end
     end
   end
+  -- dump(vim.fn.reltimefloat(vim.fn.reltime(start)) * 1000)
 end
 
 function M.has_highlights(bufnr)
@@ -142,7 +144,7 @@ end
 function M.detach(bufnr)
   M.clear_usage_highlights(bufnr)
   api.nvim_del_augroup_by_name(string.format("Highlight_usages_in_window_%d", bufnr))
-  last_nodes[bufnr] = nil
+  last_cache[bufnr] = nil
 end
 
 
