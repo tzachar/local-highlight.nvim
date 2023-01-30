@@ -1,7 +1,6 @@
 # local-highlight.nvim
 
-Using a combination of treesitter and regexes to highligh uses of word under the
-cursor.
+Using regexes and extmarks to highligh uses of word under the cursor.
 
 # Performance
 
@@ -11,16 +10,16 @@ highligh-definitions which performs poorly on large files.
 # install
 
 Using Lazy:
+
 ```lua
   {
       'tzachar/local-highlight.nvim',
-      dependencies = 'nvim-treesitter/nvim-treesitter',
       config = function()
-        require('nvim-treesitter.configs').setup({
-          local_highlight = {
-            enable = true,
-          },
+        require('local-highlight').setup({
+            file_types = {'python', 'cpp'}
         })
       end
   },
 ```
+
+Make sure to specify file types to attach to.
