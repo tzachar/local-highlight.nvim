@@ -50,7 +50,6 @@ function M.highlight_usages(bufnr)
       [[\k*\%]] .. cursor[2] + 1 .. [[c\k*]]
     )
   )
-  dump(curword, curword_start, curword_end)
   if not curword or #curword == 0 then
     M.clear_usage_highlights(bufnr)
     return
