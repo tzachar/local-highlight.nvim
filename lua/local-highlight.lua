@@ -44,7 +44,13 @@ function M.highlight_usages(bufnr)
     M.clear_usage_highlights(bufnr)
     return
   end
-  local curword = vim.fn.expand('<cword>')
+  local curword, curword_start, curword_end = unpack(
+    vim.fn.matchstrpos(
+      line,
+      [[\k*\%]] .. cursor[2] + 1 .. [[c\k*]]
+    )
+  )
+  dump(curword, curword_start, curword_end)
   if not curword or #curword == 0 then
     M.clear_usage_highlights(bufnr)
     return
@@ -56,7 +62,8 @@ function M.highlight_usages(bufnr)
       and topline == last_cache[bufnr].topline
       and botline == last_cache[bufnr].botline
       and cursor[1] == last_cache[bufnr].row
-      and cursor[2] == last_cache[bufnr].col
+      and cursor[2] >= last_cache[bufnr].col_start
+      and cursor[2] <= last_cache[bufnr].col_end
       and M.has_highlights(bufnr)) then
     return
   else
@@ -65,7 +72,8 @@ function M.highlight_usages(bufnr)
         topline = topline,
         botline = botline,
         row = cursor[1],
-        col = cursor[2],
+        col_start = curword_start,
+        col_end = curword_end,
       }
   end
 
