@@ -33,3 +33,21 @@ Make sure to specify file types to attach to.
 Multiple plugins to highlight the word under the cursor exist. However, none of them solved all of the following issues for me:
 1. Performance (especially on large files)
 2. Highlight mechanics: by using extmarks, the current format of each highlighted word remains the same (e.g., italics, treesitter highlights)
+
+# Setup
+
+The plugin works out of the box if you want to use `FileType`s to attach to
+buffers. However, you can use any `autocommand` to attach an event to your liking. For
+example, to attach to *any* buffer:
+
+```lua
+vim.api.nvim_create_autocmd('BufEnter', {
+  pattern = {'*.*'},
+  callback = function(data)
+    require('local-highlight').attach(data.buf)
+  end
+})
+```
+
+The plugin will take care not to reattach and to delete the autocommands when
+the buffer is closed.

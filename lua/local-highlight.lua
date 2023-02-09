@@ -117,7 +117,12 @@ function M.clear_usage_highlights(bufnr)
 end
 
 function M.attach(bufnr)
-  local au = api.nvim_create_augroup(string.format("Highlight_usages_in_window_%d", bufnr), {clear = true})
+  local au_group_name = string.format("Highlight_usages_in_window_%d", bufnr)
+  local status, aus = pcall(api.nvim_get_autocmds, {group = au_group_name})
+  if status and #(aus or {}) > 0 then
+    return
+  end
+  local au = api.nvim_create_augroup(au_group_name, {clear = true})
   api.nvim_create_autocmd(
     {'CursorHold'}, {
       group = au,
