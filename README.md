@@ -33,7 +33,7 @@ documented below.
 By default, `local-highlight` will also use the `TSDefinitionUsage` highlighting
 group.
 
-# Why Another Highlight plugin?
+# Why Another Highlight Plugin?
 
 Multiple plugins to highlight the word under the cursor exist. However, none of them solved all of the following issues for me:
 1. Performance (especially on large files)
@@ -56,3 +56,14 @@ vim.api.nvim_create_autocmd('BufEnter', {
 
 The plugin will take care not to reattach and to delete the autocommands when
 the buffer is closed.
+
+# How the Plugin Works
+
+`local-highligh` will attach to a buffer and register an autocommand for the
+`CursorHold` event. Once the event fires, `local-highligh` will grab the word
+under the cursor and will highlight all of the usages of the same word in the
+visible lines of the buffer.
+
+One implecation of using `CursorHold` is that interactivity depends on
+`updatetime`, which is 4000 by default. A good advice is to set it to something
+more reasonable, like 500, to get good interactivity.
