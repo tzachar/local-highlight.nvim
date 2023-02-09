@@ -1,7 +1,7 @@
 # local-highlight.nvim
 
 Using regexes and extmarks to highligh uses of word under the cursor.
-Keeps updates local to currently visible lines, thus  rendering enabling blazingly fast performance.
+Keeps updates local to currently visible lines, thus enabling blazingly fast performance.
 # In Action
 
 ![recording](https://user-images.githubusercontent.com/4946827/217664452-eb79ff0c-fa91-4d24-adcd-519faf4a2785.gif)
