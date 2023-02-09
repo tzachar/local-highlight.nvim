@@ -174,7 +174,15 @@ function M.setup(config)
   if config.file_types and #(config.file_types)> 0 then
     vim.api.nvim_create_autocmd('FileType', {
       group = au,
-      pattern = config.file_types or {},
+      pattern = config.file_types,
+      callback = function(data)
+        M.attach(data.buf)
+      end
+    })
+  elseif config.file_types == nil then
+    vim.api.nvim_create_autocmd('BufEnter', {
+      group = au,
+      pattern = '*.*',
       callback = function(data)
         M.attach(data.buf)
       end

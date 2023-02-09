@@ -41,8 +41,31 @@ Multiple plugins to highlight the word under the cursor exist. However, none of 
 
 # Setup
 
+You can setup local-highligh` as follows:`
+
+```lua
+require('local-highlight').setup({
+    file_types = {'python', 'cpp'},
+    hlgroup = 'TSDefinitionUsage',
+})
+```
+
+## `hlgroup`
+
+Specify the highlighting group to use.
+
+## `file_types`
+
 The plugin works out of the box if you want to use `FileType`s to attach to
-buffers. However, you can use any `autocommand` to attach an event to your liking. For
+buffers. 
+
+If you do not supply the `file_types` configuration option, local-highligh` will
+attach by default to all buffers type using the `BufEnter` autocommand event.
+
+## API
+
+If you want to directly attach the plugin to your buffers, you can use any
+`autocommand` to attach an event to your liking. For
 example, to attach to *any* buffer:
 
 ```lua
