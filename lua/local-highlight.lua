@@ -5,6 +5,10 @@ local api = vim.api
 
 local M = {
   regexes = {},
+  config = {
+    file_types = {},
+    hlgroup = 'TSDefinitionUsage',
+  },
 }
 
 local usage_namespace = api.nvim_create_namespace("highlight_usages_in_window")
@@ -97,7 +101,7 @@ function M.highlight_usages(bufnr)
           vim.highlight.range(
             bufnr,
             usage_namespace,
-            'TSDefinitionUsage',
+            M.config.hlgroup,
             { row, col },
             { row, col + curpattern_len }
           )
@@ -161,6 +165,11 @@ end
 
 
 function M.setup(config)
+  M.config = vim.tbl_deep_extend(
+    "keep",
+    config or {},
+    M.config
+  )
   local au = api.nvim_create_augroup("Highlight_usages_in_window", {clear = true})
   if config.file_types and #(config.file_types)> 0 then
     vim.api.nvim_create_autocmd('FileType', {
