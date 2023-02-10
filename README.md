@@ -1,6 +1,6 @@
 # local-highlight.nvim
 
-Using regexes and extmarks to highligh uses of word under the cursor.
+Using regexes and extmarks to highlight uses of word under the cursor.
 Keeps updates local to currently visible lines, thus enabling blazingly fast performance.
 # In Action
 
@@ -9,7 +9,7 @@ Keeps updates local to currently visible lines, thus enabling blazingly fast per
 # Performance
 
 This plugin replaces `nvim-treesitter/nvim-treesitter-refactor`
-highligh-definitions which performs poorly on large files.
+highlight-definitions which performs poorly on large files.
 
 # install
 
@@ -41,7 +41,7 @@ Multiple plugins to highlight the word under the cursor exist. However, none of 
 
 # Setup
 
-You can setup local-highligh` as follows:`
+You can setup local-highlight` as follows:`
 
 ```lua
 require('local-highlight').setup({
@@ -59,7 +59,7 @@ Specify the highlighting group to use.
 The plugin works out of the box if you want to use `FileType`s to attach to
 buffers. 
 
-If you do not supply the `file_types` configuration option, local-highligh` will
+If you do not supply the `file_types` configuration option, local-highlight` will
 attach by default to all buffers type using the `BufEnter` autocommand event.
 
 ## API
@@ -82,11 +82,11 @@ the buffer is closed.
 
 # How the Plugin Works
 
-`local-highligh` will attach to a buffer and register an autocommand for the
-`CursorHold` event. Once the event fires, `local-highligh` will grab the word
+`local-highlight` will attach to a buffer and register an autocommand for the
+`CursorHold` event. Once the event fires, `local-highlight` will grab the word
 under the cursor and will highlight all of the usages of the same word in the
 visible lines of the buffer.
 
-One implecation of using `CursorHold` is that interactivity depends on
+One implication of using `CursorHold` is that interactivity depends on
 `updatetime`, which is 4000 by default. A good advice is to set it to something
 more reasonable, like 500, to get good interactivity.
