@@ -47,6 +47,7 @@ You can setup local-highlight` as follows:`
 require('local-highlight').setup({
     file_types = {'python', 'cpp'},
     hlgroup = 'TSDefinitionUsage',
+    cw_hlgroup = nil,
 })
 ```
 
@@ -54,13 +55,18 @@ require('local-highlight').setup({
 
 Specify the highlighting group to use.
 
+## `cw_hlgroup`
+
+Specify the highlighting group to use for the word under the cursor. Defaults to
+`nil`, which means "Do not apply any highlighting".
+
 ## `file_types`
 
 The plugin works out of the box if you want to use `FileType`s to attach to
 buffers. 
 
-If you do not supply the `file_types` configuration option, local-highlight` will
-attach by default to all buffers type using the `BufEnter` autocommand event.
+If you do not supply the `file_types` configuration option, `local-highlight` will
+attach by default to all buffers using the `BufRead` autocommand event.
 
 ## API
 
@@ -69,7 +75,7 @@ If you want to directly attach the plugin to your buffers, you can use any
 example, to attach to *any* buffer:
 
 ```lua
-vim.api.nvim_create_autocmd('BufEnter', {
+vim.api.nvim_create_autocmd('BufRead', {
   pattern = {'*.*'},
   callback = function(data)
     require('local-highlight').attach(data.buf)

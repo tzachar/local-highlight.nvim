@@ -8,6 +8,7 @@ local M = {
   config = {
     file_types = {},
     hlgroup = 'TSDefinitionUsage',
+    cw_hlgroup = nil,
   },
 }
 
@@ -102,6 +103,19 @@ function M.highlight_usages(bufnr)
             bufnr,
             usage_namespace,
             M.config.hlgroup,
+            { row, col },
+            { row, col + curpattern_len }
+          )
+        elseif (
+          row == cursor_range[1]
+          and cursor_range[2] >= col
+          and cursor_range[2] <= col + curpattern_len
+          and M.config.cw_hlgroup
+        ) then
+          vim.highlight.range(
+            bufnr,
+            usage_namespace,
+            M.config.cw_hlgroup,
             { row, col },
             { row, col + curpattern_len }
           )
