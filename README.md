@@ -80,6 +80,20 @@ vim.api.nvim_create_autocmd('BufEnter', {
 The plugin will take care not to reattach and to delete the autocommands when
 the buffer is closed.
 
+# User Commands
+
+## LocalHighlightToggle
+
+Toggle local highlighting for the current buffer.
+
+## LocalHighlightOff
+
+Turn local highlighting off for the current buffer.
+
+## LocalHighlightOnj
+
+Turn local highlighting on for the current buffer.
+
 # How the Plugin Works
 
 `local-highlight` will attach to a buffer and register an autocommand for the

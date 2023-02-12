@@ -120,13 +120,28 @@ function M.clear_usage_highlights(bufnr)
   api.nvim_buf_clear_namespace(bufnr, usage_namespace, 0, -1)
 end
 
-function M.attach(bufnr)
-  local au_group_name = string.format("Highlight_usages_in_window_%d", bufnr)
+function M.buf_au_group_name(bufnr)
+  return string.format("Highlight_usages_in_window_%d", bufnr)
+end
+
+function M.is_attached(bufnr)
+  local au_group_name = M.buf_au_group_name(bufnr)
   local status, aus = pcall(api.nvim_get_autocmds, {group = au_group_name})
   if status and #(aus or {}) > 0 then
+    return true
+  else
+    return false
+  end
+end
+
+function M.attach(bufnr)
+  if M.is_attached(bufnr) then
     return
   end
-  local au = api.nvim_create_augroup(au_group_name, {clear = true})
+  local au = api.nvim_create_augroup(
+    M.buf_au_group_name(bufnr),
+    {clear = true}
+  )
   api.nvim_create_autocmd(
     {'CursorHold'}, {
       group = au,
@@ -159,7 +174,7 @@ end
 
 function M.detach(bufnr)
   M.clear_usage_highlights(bufnr)
-  api.nvim_del_augroup_by_name(string.format("Highlight_usages_in_window_%d", bufnr))
+  api.nvim_del_augroup_by_name(M.buf_au_group_name(bufnr))
   last_cache[bufnr] = nil
 end
 
@@ -188,6 +203,35 @@ function M.setup(config)
       end
     })
   end
+
+  --- add togglecommands
+  vim.api.nvim_create_user_command(
+    'LocalHighlightOff',
+    function()
+      M.detach(vim.fn.bufnr('%'))
+    end,
+    {desc='Turn local-highligh.nvim off'}
+  )
+  vim.api.nvim_create_user_command(
+    'LocalHighlightOn',
+    function()
+      M.attach(vim.fn.bufnr('%'))
+    end,
+    {desc='Turn local-highligh.nvim on'}
+  )
+  vim.api.nvim_create_user_command(
+    'LocalHighlightToggle',
+    function()
+      local bufnr = vim.fn.bufnr('%')
+      if M.is_attached(bufnr) then
+        M.detach(bufnr)
+      else
+        M.attach(bufnr)
+      end
+    end,
+    {desc='Toggle local-highligh.nvim'}
+  )
+
 end
 
 return M
