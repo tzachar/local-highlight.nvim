@@ -180,7 +180,7 @@ function M.setup(config)
       end
     })
   elseif config.file_types == nil then
-    vim.api.nvim_create_autocmd('BufEnter', {
+    vim.api.nvim_create_autocmd('BufRead', {
       group = au,
       pattern = '*.*',
       callback = function(data)
