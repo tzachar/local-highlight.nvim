@@ -19,19 +19,13 @@ Using Lazy:
   {
       'tzachar/local-highlight.nvim',
       config = function()
-        require('local-highlight').setup({
-            file_types = {'python', 'cpp'},
-            hlgroup = 'TSDefinitionUsage',
-        })
+        require('local-highlight').setup()
       end
   },
 ```
 
 Make sure to specify file types to attach to, or use the `attach` interface
 documented below. 
-
-By default, `local-highlight` will also use the `TSDefinitionUsage` highlighting
-group.
 
 # Why Another Highlight Plugin?
 
@@ -54,6 +48,9 @@ require('local-highlight').setup({
 ## `hlgroup`
 
 Specify the highlighting group to use.
+
+By default, `local-highlight` will use the `LocalHighlight` highlighting
+group, defined upon startup. You can use any other group you desire.
 
 ## `cw_hlgroup`
 

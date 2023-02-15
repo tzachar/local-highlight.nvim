@@ -7,7 +7,7 @@ local M = {
   regexes = {},
   config = {
     file_types = {},
-    hlgroup = 'TSDefinitionUsage',
+    hlgroup = 'LocalHighlight',
     cw_hlgroup = nil,
   },
 }
@@ -194,6 +194,11 @@ end
 
 
 function M.setup(config)
+  vim.api.nvim_set_hl(0, "LocalHighlight", {
+    fg="#dcd7ba",
+    bg="#2d4f67",
+  })
+
   M.config = vim.tbl_deep_extend(
     "keep",
     config or {},
