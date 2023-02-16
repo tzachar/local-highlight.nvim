@@ -49,8 +49,7 @@ require('local-highlight').setup({
 
 Specify the highlighting group to use.
 
-By default, `local-highlight` will use the `LocalHighlight` highlighting
-group, defined upon startup. You can use any other group you desire.
+By default, `local-highlight` will use the `LocalHighlight` highlight group, which it defines upon startup. If the group is already defined elsewhere in your config then it will not be overwritten. You can use any other group you desire.
 
 ## `cw_hlgroup`
 

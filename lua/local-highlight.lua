@@ -221,6 +221,7 @@ function M.setup(config)
   vim.api.nvim_set_hl(0, "LocalHighlight", {
     fg="#dcd7ba",
     bg="#2d4f67",
+    default=true
   })
 
   M.config = vim.tbl_deep_extend(
