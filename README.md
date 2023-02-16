@@ -93,9 +93,14 @@ Toggle local highlighting for the current buffer.
 
 Turn local highlighting off for the current buffer.
 
-## LocalHighlightOnj
+## LocalHighlightOn
 
 Turn local highlighting on for the current buffer.
+
+## LocalHighlightStats
+
+Echo timing information: total number of invocations and the average running
+time in milliseconds.
 
 # How the Plugin Works
 

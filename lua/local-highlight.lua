@@ -10,6 +10,9 @@ local M = {
     hlgroup = 'LocalHighlight',
     cw_hlgroup = nil,
   },
+  timing_info = {},
+  usage_count = 0,
+  debug_print_usage_every_time = false,
 }
 
 local usage_namespace = api.nvim_create_namespace("highlight_usages_in_window")
@@ -28,6 +31,17 @@ local function all_matches(bufnr, regex, line)
   end
 end
 
+function M.stats()
+  local avg_time = 0
+  for _, t in ipairs(M.timing_info) do
+    avg_time = avg_time + t
+  end
+  return string.format([[
+Total Usage Count   : %d
+Average Running Time : %f msec
+  ]], M.usage_count, avg_time / #M.timing_info)
+end
+
 function M.regex(pattern)
   local ret = M.regexes[pattern]
   if ret ~= nil then
@@ -43,6 +57,7 @@ function M.regex(pattern)
 end
 
 function M.highlight_usages(bufnr)
+  local start_time = vim.fn.reltime()
   local cursor = api.nvim_win_get_cursor(0)
   local line = vim.fn.getline('.')
   if string.sub(line, cursor[2] + 1, cursor[2] + 1) == ' ' then
@@ -93,7 +108,6 @@ function M.highlight_usages(bufnr)
     return
   end
 
-  -- local start = vim.fn.reltime()
   for row=topline, botline - 1 do
     local matches = all_matches(bufnr, regex, row)
     if matches and #matches > 0 then
@@ -123,7 +137,17 @@ function M.highlight_usages(bufnr)
       end
     end
   end
-  -- dump(vim.fn.reltimefloat(vim.fn.reltime(start)) * 1000)
+
+  local time_since_start = vim.fn.reltimefloat(vim.fn.reltime(start_time)) * 1000
+  if M.debug_print_usage_every_time then
+    vim.api.nvim_echo(
+      { { string.format('LH: %f', time_since_start) } },
+      false,
+      { }
+    )
+  end
+  table.insert(M.timing_info, time_since_start)
+  M.usage_count = M.usage_count + 1
 end
 
 function M.has_highlights(bufnr)
@@ -251,6 +275,17 @@ function M.setup(config)
     {desc='Toggle local-highligh.nvim'}
   )
 
+  vim.api.nvim_create_user_command(
+    'LocalHighlightStats',
+    function()
+      vim.api.nvim_echo(
+        { { M.stats() } },
+        false,
+        { }
+      )
+    end,
+    { force = true }
+  )
 end
 
 return M
