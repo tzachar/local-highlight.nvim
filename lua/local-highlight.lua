@@ -230,10 +230,10 @@ function M.setup(config)
     M.config
   )
   local au = api.nvim_create_augroup("Highlight_usages_in_window", {clear = true})
-  if config.file_types and #(config.file_types)> 0 then
+  if M.config.file_types and #(M.config.file_types)> 0 then
     vim.api.nvim_create_autocmd('FileType', {
       group = au,
-      pattern = config.file_types,
+      pattern = M.config.file_types,
       callback = function(data)
         M.attach(data.buf)
       end
