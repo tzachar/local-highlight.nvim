@@ -37,7 +37,7 @@ function M.stats()
     avg_time = avg_time + t
   end
   return string.format([[
-Total Usage Count   : %d
+Total Usage Count    : %d
 Average Running Time : %f msec
   ]], M.usage_count, avg_time / #M.timing_info)
 end
@@ -108,34 +108,37 @@ function M.highlight_usages(bufnr)
     return
   end
 
+  local args = {}
   for row=topline, botline - 1 do
     local matches = all_matches(bufnr, regex, row)
-    if matches and #matches > 0 then
-      for _, col in ipairs(matches) do
-        if row ~= cursor_range[1] or cursor_range[2] < col or cursor_range[2] > col + curpattern_len then
-          vim.highlight.range(
-            bufnr,
-            usage_namespace,
-            M.config.hlgroup,
-            { row, col },
-            { row, col + curpattern_len }
-          )
-        elseif (
-          row == cursor_range[1]
-          and cursor_range[2] >= col
-          and cursor_range[2] <= col + curpattern_len
-          and M.config.cw_hlgroup
-        ) then
-          vim.highlight.range(
-            bufnr,
-            usage_namespace,
-            M.config.cw_hlgroup,
-            { row, col },
-            { row, col + curpattern_len }
-          )
-        end
+    for _, col in ipairs(matches) do
+      if row ~= cursor_range[1] or cursor_range[2] < col or cursor_range[2] > col + curpattern_len then
+        table.insert(args, {
+          bufnr,
+          usage_namespace,
+          M.config.hlgroup,
+          { row, col },
+          { row, col + curpattern_len }
+        })
+      elseif (
+        row == cursor_range[1]
+        and cursor_range[2] >= col
+        and cursor_range[2] <= col + curpattern_len
+        and M.config.cw_hlgroup
+      ) then
+        table.insert(args, {
+          bufnr,
+          usage_namespace,
+          M.config.cw_hlgroup,
+          { row, col },
+          { row, col + curpattern_len }
+        })
       end
     end
+  end
+
+  for _, arg in ipairs(args) do
+    vim.highlight.range(unpack(arg))
   end
 
   local time_since_start = vim.fn.reltimefloat(vim.fn.reltime(start_time)) * 1000
