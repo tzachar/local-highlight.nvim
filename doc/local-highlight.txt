@@ -1,0 +1,155 @@
+*local-highlight.txt*                highlight uses of cword in current window
+
+==============================================================================
+Table of Contents                          *local-highlight-table-of-contents*
+
+1. local-highlight.nvim                 |local-highlight-local-highlight.nvim|
+2. Performance                                   |local-highlight-performance|
+3. install                                           |local-highlight-install|
+4. Why Another Highlight Plugin?|local-highlight-why-another-highlight-plugin?|
+5. Setup                                               |local-highlight-setup|
+  - `hlgroup`                                      |local-highlight-`hlgroup`|
+  - `cw_hlgroup`                                |local-highlight-`cw_hlgroup`|
+  - `file_types`                                |local-highlight-`file_types`|
+  - API                                                  |local-highlight-api|
+6. User Commands                               |local-highlight-user-commands|
+  - LocalHighlightToggle                |local-highlight-localhighlighttoggle|
+  - LocalHighlightOff                      |local-highlight-localhighlightoff|
+  - LocalHighlightOn                        |local-highlight-localhighlighton|
+  - LocalHighlightStats                  |local-highlight-localhighlightstats|
+7. How the Plugin Works                 |local-highlight-how-the-plugin-works|
+
+==============================================================================
+1. local-highlight.nvim                 *local-highlight-local-highlight.nvim*
+
+Using regexes and extmarks to highlight uses of word under the cursor. Keeps
+updates local to currently visible lines, thus enabling blazingly fast
+performance. # In Action
+
+<div class="figure">
+<img src="https://user-images.githubusercontent.com/4946827/217664452-eb79ff0c-fa91-4d24-adcd-519faf4a2785.gif" title="fig:"/>
+<p class="caption">recording</p>
+</div>
+
+==============================================================================
+2. Performance                                   *local-highlight-performance*
+
+This plugin replaces `nvim-treesitter/nvim-treesitter-refactor`
+highlight-definitions which performs poorly on large files.
+
+==============================================================================
+3. install                                           *local-highlight-install*
+
+Using Lazy:
+
+>
+      {
+          'tzachar/local-highlight.nvim',
+          config = function()
+            require('local-highlight').setup()
+          end
+      },
+<
+
+
+Make sure to specify file types to attach to, or use the `attach` interface
+documented below.
+
+==============================================================================
+4. Why Another Highlight Plugin?*local-highlight-why-another-highlight-plugin?*
+
+Multiple plugins to highlight the word under the cursor exist. However, none of
+them solved all of the following issues for me: 1. Performance (especially on
+large files) 2. Highlight mechanics: by using extmarks, the current format of
+each highlighted word remains the same (e.g., italics, treesitter highlights)
+
+==============================================================================
+5. Setup                                               *local-highlight-setup*
+
+You can setup local-highlight`as follows:`
+
+>
+    require('local-highlight').setup({
+        file_types = {'python', 'cpp'},
+        hlgroup = 'Search',
+        cw_hlgroup = nil,
+    })
+<
+
+
+`HLGROUP`                                          *local-highlight-`hlgroup`*
+
+Specify the highlighting group to use.
+
+By default, `local-highlight` will use the `LocalHighlight` highlight group,
+which it defines upon startup. If the group is already defined elsewhere in
+your config then it will not be overwritten. You can also use any other group
+you desire, e.g., see above where `Search` is used.
+
+`CW_HLGROUP`                                    *local-highlight-`cw_hlgroup`*
+
+Specify the highlighting group to use for the word under the cursor. Defaults
+to `nil`, which means "Do not apply any highlighting".
+
+`FILE_TYPES`                                    *local-highlight-`file_types`*
+
+The plugin works out of the box if you want to use `FileType`s to attach to
+buffers.
+
+If you do not supply the `file_types` configuration option, `local-highlight`
+will attach by default to all buffers using the `BufRead` autocommand event.
+
+API                                                      *local-highlight-api*
+
+If you want to directly attach the plugin to your buffers, you can use any
+`autocommand` to attach an event to your liking. For example, to attach to
+_any_ buffer:
+
+>
+    vim.api.nvim_create_autocmd('BufRead', {
+      pattern = {'*.*'},
+      callback = function(data)
+        require('local-highlight').attach(data.buf)
+      end
+    })
+<
+
+
+The plugin will take care not to reattach and to delete the autocommands when
+the buffer is closed.
+
+==============================================================================
+6. User Commands                               *local-highlight-user-commands*
+
+LOCALHIGHLIGHTTOGGLE                    *local-highlight-localhighlighttoggle*
+
+Toggle local highlighting for the current buffer.
+
+LOCALHIGHLIGHTOFF                          *local-highlight-localhighlightoff*
+
+Turn local highlighting off for the current buffer.
+
+LOCALHIGHLIGHTON                            *local-highlight-localhighlighton*
+
+Turn local highlighting on for the current buffer.
+
+LOCALHIGHLIGHTSTATS                      *local-highlight-localhighlightstats*
+
+Echo timing information: total number of invocations and the average running
+time in milliseconds.
+
+==============================================================================
+7. How the Plugin Works                 *local-highlight-how-the-plugin-works*
+
+`local-highlight` will attach to a buffer and register an autocommand for the
+`CursorHold` event. Once the event fires, `local-highlight` will grab the word
+under the cursor and will highlight all of the usages of the same word in the
+visible lines of the buffer.
+
+One implication of using `CursorHold` is that interactivity depends on
+`updatetime`, which is 4000 by default. A good advice is to set it to something
+more reasonable, like 500, to get good interactivity.
+
+Generated by panvimdoc <https://github.com/kdheepak/panvimdoc>
+
+vim:tw=78:ts=8:noet:ft=help:norl:

@@ -15,7 +15,7 @@ local M = {
   debug_print_usage_every_time = false,
 }
 
-local usage_namespace = api.nvim_create_namespace("highlight_usages_in_window")
+local usage_namespace = api.nvim_create_namespace('highlight_usages_in_window')
 local last_cache = {}
 
 local function all_matches(bufnr, regex, line)
@@ -36,10 +36,14 @@ function M.stats()
   for _, t in ipairs(M.timing_info) do
     avg_time = avg_time + t
   end
-  return string.format([[
+  return string.format(
+    [[
 Total Usage Count    : %d
 Average Running Time : %f msec
-  ]], M.usage_count, avg_time / #M.timing_info)
+  ]],
+    M.usage_count,
+    avg_time / #M.timing_info
+  )
 end
 
 function M.regex(pattern)
@@ -48,7 +52,7 @@ function M.regex(pattern)
     return ret
   end
   ret = vim.regex(pattern)
-  if #(M.regexes) > 1000 then
+  if #M.regexes > 1000 then
     table.remove(M.regexes, 1)
     table.insert(M.regexes, ret)
   end
@@ -64,36 +68,24 @@ function M.highlight_usages(bufnr)
     M.clear_usage_highlights(bufnr)
     return
   end
-  local curword, curword_start, curword_end = unpack(
-    vim.fn.matchstrpos(
-      line,
-      [[\k*\%]] .. cursor[2] + 1 .. [[c\k*]]
-    )
-  )
+  local curword, curword_start, curword_end = unpack(vim.fn.matchstrpos(line, [[\k*\%]] .. cursor[2] + 1 .. [[c\k*]]))
   if not curword or #curword == 0 then
     M.clear_usage_highlights(bufnr)
     return
   end
   local topline, botline = vim.fn.line('w0') - 1, vim.fn.line('w$')
   -- Don't calculate usages again if we are on the same word.
-  if (last_cache[bufnr]
-      and curword == last_cache[bufnr].curword
-      and topline == last_cache[bufnr].topline
-      and botline == last_cache[bufnr].botline
-      and cursor[1] == last_cache[bufnr].row
-      and cursor[2] >= last_cache[bufnr].col_start
-      and cursor[2] <= last_cache[bufnr].col_end
-      and M.has_highlights(bufnr)) then
+  if last_cache[bufnr] and curword == last_cache[bufnr].curword and topline == last_cache[bufnr].topline and botline == last_cache[bufnr].botline and cursor[1] == last_cache[bufnr].row and cursor[2] >= last_cache[bufnr].col_start and cursor[2] <= last_cache[bufnr].col_end and M.has_highlights(bufnr) then
     return
   else
-      last_cache[bufnr] = {
-        curword = curword,
-        topline = topline,
-        botline = botline,
-        row = cursor[1],
-        col_start = curword_start,
-        col_end = curword_end,
-      }
+    last_cache[bufnr] = {
+      curword = curword,
+      topline = topline,
+      botline = botline,
+      row = cursor[1],
+      col_start = curword_start,
+      col_end = curword_end,
+    }
   end
 
   M.clear_usage_highlights(bufnr)
@@ -109,7 +101,7 @@ function M.highlight_usages(bufnr)
   end
 
   local args = {}
-  for row=topline, botline - 1 do
+  for row = topline, botline - 1 do
     local matches = all_matches(bufnr, regex, row)
     for _, col in ipairs(matches) do
       if row ~= cursor_range[1] or cursor_range[2] < col or cursor_range[2] > col + curpattern_len then
@@ -118,20 +110,15 @@ function M.highlight_usages(bufnr)
           usage_namespace,
           M.config.hlgroup,
           { row, col },
-          { row, col + curpattern_len }
+          { row, col + curpattern_len },
         })
-      elseif (
-        row == cursor_range[1]
-        and cursor_range[2] >= col
-        and cursor_range[2] <= col + curpattern_len
-        and M.config.cw_hlgroup
-      ) then
+      elseif row == cursor_range[1] and cursor_range[2] >= col and cursor_range[2] <= col + curpattern_len and M.config.cw_hlgroup then
         table.insert(args, {
           bufnr,
           usage_namespace,
           M.config.cw_hlgroup,
           { row, col },
-          { row, col + curpattern_len }
+          { row, col + curpattern_len },
         })
       end
     end
@@ -143,11 +130,7 @@ function M.highlight_usages(bufnr)
 
   local time_since_start = vim.fn.reltimefloat(vim.fn.reltime(start_time)) * 1000
   if M.debug_print_usage_every_time then
-    vim.api.nvim_echo(
-      { { string.format('LH: %f', time_since_start) } },
-      false,
-      { }
-    )
+    vim.api.nvim_echo({ { string.format('LH: %f', time_since_start) } }, false, {})
   end
   table.insert(M.timing_info, time_since_start)
   M.usage_count = M.usage_count + 1
@@ -162,12 +145,12 @@ function M.clear_usage_highlights(bufnr)
 end
 
 function M.buf_au_group_name(bufnr)
-  return string.format("Highlight_usages_in_window_%d", bufnr)
+  return string.format('Highlight_usages_in_window_%d', bufnr)
 end
 
 function M.is_attached(bufnr)
   local au_group_name = M.buf_au_group_name(bufnr)
-  local status, aus = pcall(api.nvim_get_autocmds, {group = au_group_name})
+  local status, aus = pcall(api.nvim_get_autocmds, { group = au_group_name })
   if status and #(aus or {}) > 0 then
     return true
   else
@@ -179,38 +162,29 @@ function M.attach(bufnr)
   if M.is_attached(bufnr) then
     return
   end
-  local au = api.nvim_create_augroup(
-    M.buf_au_group_name(bufnr),
-    {clear = true}
-  )
-  api.nvim_create_autocmd(
-    {'CursorHold'}, {
-      group = au,
-      buffer = bufnr,
-      callback = function()
-        M.highlight_usages(bufnr)
-      end
-    }
-  )
-  api.nvim_create_autocmd(
-    {'InsertEnter'}, {
-      group = au,
-      buffer = bufnr,
-      callback = function()
-        M.clear_usage_highlights(bufnr)
-      end
-    }
-  )
-  api.nvim_create_autocmd(
-    {'BufDelete'}, {
-      group = au,
-      buffer = bufnr,
-      callback = function()
-        M.clear_usage_highlights(bufnr)
-        M.detach(bufnr)
-      end
-    }
-  )
+  local au = api.nvim_create_augroup(M.buf_au_group_name(bufnr), { clear = true })
+  api.nvim_create_autocmd({ 'CursorHold' }, {
+    group = au,
+    buffer = bufnr,
+    callback = function()
+      M.highlight_usages(bufnr)
+    end,
+  })
+  api.nvim_create_autocmd({ 'InsertEnter' }, {
+    group = au,
+    buffer = bufnr,
+    callback = function()
+      M.clear_usage_highlights(bufnr)
+    end,
+  })
+  api.nvim_create_autocmd({ 'BufDelete' }, {
+    group = au,
+    buffer = bufnr,
+    callback = function()
+      M.clear_usage_highlights(bufnr)
+      M.detach(bufnr)
+    end,
+  })
 end
 
 function M.detach(bufnr)
@@ -219,27 +193,22 @@ function M.detach(bufnr)
   last_cache[bufnr] = nil
 end
 
-
 function M.setup(config)
-  vim.api.nvim_set_hl(0, "LocalHighlight", {
-    fg="#dcd7ba",
-    bg="#2d4f67",
-    default=true
+  vim.api.nvim_set_hl(0, 'LocalHighlight', {
+    fg = '#dcd7ba',
+    bg = '#2d4f67',
+    default = true,
   })
 
-  M.config = vim.tbl_deep_extend(
-    "keep",
-    config or {},
-    M.config
-  )
-  local au = api.nvim_create_augroup("Highlight_usages_in_window", {clear = true})
-  if M.config.file_types and #(M.config.file_types)> 0 then
+  M.config = vim.tbl_deep_extend('keep', config or {}, M.config)
+  local au = api.nvim_create_augroup('Highlight_usages_in_window', { clear = true })
+  if M.config.file_types and #M.config.file_types > 0 then
     vim.api.nvim_create_autocmd('FileType', {
       group = au,
       pattern = M.config.file_types,
       callback = function(data)
         M.attach(data.buf)
-      end
+      end,
     })
   elseif config.file_types == nil then
     vim.api.nvim_create_autocmd('BufRead', {
@@ -247,49 +216,29 @@ function M.setup(config)
       pattern = '*.*',
       callback = function(data)
         M.attach(data.buf)
-      end
+      end,
     })
   end
 
   --- add togglecommands
-  vim.api.nvim_create_user_command(
-    'LocalHighlightOff',
-    function()
-      M.detach(vim.fn.bufnr('%'))
-    end,
-    {desc='Turn local-highligh.nvim off'}
-  )
-  vim.api.nvim_create_user_command(
-    'LocalHighlightOn',
-    function()
-      M.attach(vim.fn.bufnr('%'))
-    end,
-    {desc='Turn local-highligh.nvim on'}
-  )
-  vim.api.nvim_create_user_command(
-    'LocalHighlightToggle',
-    function()
-      local bufnr = vim.fn.bufnr('%')
-      if M.is_attached(bufnr) then
-        M.detach(bufnr)
-      else
-        M.attach(bufnr)
-      end
-    end,
-    {desc='Toggle local-highligh.nvim'}
-  )
+  vim.api.nvim_create_user_command('LocalHighlightOff', function()
+    M.detach(vim.fn.bufnr('%'))
+  end, { desc = 'Turn local-highligh.nvim off' })
+  vim.api.nvim_create_user_command('LocalHighlightOn', function()
+    M.attach(vim.fn.bufnr('%'))
+  end, { desc = 'Turn local-highligh.nvim on' })
+  vim.api.nvim_create_user_command('LocalHighlightToggle', function()
+    local bufnr = vim.fn.bufnr('%')
+    if M.is_attached(bufnr) then
+      M.detach(bufnr)
+    else
+      M.attach(bufnr)
+    end
+  end, { desc = 'Toggle local-highligh.nvim' })
 
-  vim.api.nvim_create_user_command(
-    'LocalHighlightStats',
-    function()
-      vim.api.nvim_echo(
-        { { M.stats() } },
-        false,
-        { }
-      )
-    end,
-    { force = true }
-  )
+  vim.api.nvim_create_user_command('LocalHighlightStats', function()
+    vim.api.nvim_echo({ { M.stats() } }, false, {})
+  end, { force = true })
 end
 
 return M
