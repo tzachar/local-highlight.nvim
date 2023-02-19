@@ -5,8 +5,9 @@ on:
     paths:
       - "lua/**.lua"
       - "examples/**.lua"
-      - ".stylua.toml"
+      - "stylua.toml"
       - "README.md"
+      - ".github/workflows/*.yml"
 
 # Cancel any in-progress CI runs for a PR if it is updated
 concurrency:
