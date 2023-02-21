@@ -12,6 +12,7 @@ Table of Contents                          *local-highlight-table-of-contents*
   - cw_hlgroup                              |local-highlight-setup-cw_hlgroup|
   - file_types                              |local-highlight-setup-file_types|
   - API                                            |local-highlight-setup-api|
+  - Callbacks                                |local-highlight-setup-callbacks|
 6. User Commands                               |local-highlight-user-commands|
   - LocalHighlightToggle  |local-highlight-user-commands-localhighlighttoggle|
   - LocalHighlightOff        |local-highlight-user-commands-localhighlightoff|
@@ -118,6 +119,22 @@ _any_ buffer:
 
 The plugin will take care not to reattach and to delete the autocommands
 whenthe buffer is closed.
+
+
+CALLBACKS                                    *local-highlight-setup-callbacks*
+
+
+MATCH COUNT ~
+
+You can request the current count of matches. This can be used, e.g., in
+astatus line plugin:
+
+>lua
+    require('local-highlight').match_count(bufnr)
+<
+
+where `bufnr` is the buffer number the count is requested for or 0 for
+thecurrent buffer.
 
 
 ==============================================================================
