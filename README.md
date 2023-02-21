@@ -82,6 +82,20 @@ vim.api.nvim_create_autocmd('BufRead', {
 The plugin will take care not to reattach and to delete the autocommands when
 the buffer is closed.
 
+## Callbacks
+
+### Match Count
+
+You can request the current count of matches. This can be used, e.g., in a
+status line plugin:
+
+```lua
+require('local-highlight').match_count(bufnr)
+```
+
+where `bufnr` is the buffer number the count is requested for or 0 for the
+current buffer.
+
 # User Commands
 
 ## LocalHighlightToggle

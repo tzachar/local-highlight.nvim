@@ -13,10 +13,11 @@ local M = {
   timing_info = {},
   usage_count = 0,
   debug_print_usage_every_time = false,
+  last_cache = {},
+  last_count = {},
 }
 
 local usage_namespace = api.nvim_create_namespace('highlight_usages_in_window')
-local last_cache = {}
 
 local function all_matches(bufnr, regex, line)
   local ans = {}
@@ -75,10 +76,10 @@ function M.highlight_usages(bufnr)
   end
   local topline, botline = vim.fn.line('w0') - 1, vim.fn.line('w$')
   -- Don't calculate usages again if we are on the same word.
-  if last_cache[bufnr] and curword == last_cache[bufnr].curword and topline == last_cache[bufnr].topline and botline == last_cache[bufnr].botline and cursor[1] == last_cache[bufnr].row and cursor[2] >= last_cache[bufnr].col_start and cursor[2] <= last_cache[bufnr].col_end and M.has_highlights(bufnr) then
+  if M.last_cache[bufnr] and curword == M.last_cache[bufnr].curword and topline == M.last_cache[bufnr].topline and botline == M.last_cache[bufnr].botline and cursor[1] == M.last_cache[bufnr].row and cursor[2] >= M.last_cache[bufnr].col_start and cursor[2] <= M.last_cache[bufnr].col_end and M.has_highlights(bufnr) then
     return
   else
-    last_cache[bufnr] = {
+    M.last_cache[bufnr] = {
       curword = curword,
       topline = topline,
       botline = botline,
@@ -127,6 +128,7 @@ function M.highlight_usages(bufnr)
   for _, arg in ipairs(args) do
     vim.highlight.range(unpack(arg))
   end
+  M.last_count[bufnr] = #args
 
   local time_since_start = vim.fn.reltimefloat(vim.fn.reltime(start_time)) * 1000
   if M.debug_print_usage_every_time then
@@ -136,11 +138,19 @@ function M.highlight_usages(bufnr)
   M.usage_count = M.usage_count + 1
 end
 
+function M.match_count(bufnr)
+  if (bufnr or 0) == 0 then
+    bufnr = vim.fn.bufnr()
+  end
+  return M.last_count[bufnr] or 0
+end
+
 function M.has_highlights(bufnr)
   return #api.nvim_buf_get_extmarks(bufnr, usage_namespace, 0, -1, {}) > 0
 end
 
 function M.clear_usage_highlights(bufnr)
+  M.last_count[bufnr] = 0
   api.nvim_buf_clear_namespace(bufnr, usage_namespace, 0, -1)
 end
 
@@ -190,7 +200,7 @@ end
 function M.detach(bufnr)
   M.clear_usage_highlights(bufnr)
   api.nvim_del_augroup_by_name(M.buf_au_group_name(bufnr))
-  last_cache[bufnr] = nil
+  M.last_cache[bufnr] = nil
 end
 
 function M.setup(config)
