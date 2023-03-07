@@ -63,6 +63,8 @@ buffers.
 
 If you do not supply the `file_types` configuration option, `local-highlight` will
 attach by default to all buffers using the `BufRead` autocommand event.
+If you set `file_types` to an empty table, `{}`, `local-highlight` will not
+attach to any buffer on its own, and will leave all attach logic to the user.
 
 ## API
 
