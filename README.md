@@ -39,7 +39,9 @@ You can setup local-highlight` as follows:`
 
 ```lua
 require('local-highlight').setup({
-    file_types = {'python', 'cpp'},
+    file_types = {'python', 'cpp'}, -- If this is given only attach to this
+    -- OR attach to every filetype except:
+    disable_file_types = {'tex'}
     hlgroup = 'Search',
     cw_hlgroup = nil,
 })
@@ -56,13 +58,14 @@ By default, `local-highlight` will use the `LocalHighlight` highlight group, whi
 Specify the highlighting group to use for the word under the cursor. Defaults to
 `nil`, which means "Do not apply any highlighting".
 
-## `file_types`
+## `file_types` and `disable_file_types`
 
 The plugin works out of the box if you want to use `FileType`s to attach to
-buffers. 
+buffers.
 
 If you do not supply the `file_types` configuration option, `local-highlight` will
-attach by default to all buffers using the `BufRead` autocommand event.
+attach by default to all buffers, except those filetypes specified in
+`disable_file_types` using the `BufRead` autocommand event.
 If you set `file_types` to an empty table, `{}`, `local-highlight` will not
 attach to any buffer on its own, and will leave all attach logic to the user.
 
