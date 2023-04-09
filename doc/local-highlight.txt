@@ -10,7 +10,7 @@ Table of Contents                          *local-highlight-table-of-contents*
 5. Setup                                               |local-highlight-setup|
   - hlgroup                                    |local-highlight-setup-hlgroup|
   - cw_hlgroup                              |local-highlight-setup-cw_hlgroup|
-  - file_types                              |local-highlight-setup-file_types|
+  - file_types and disable_file_types|local-highlight-setup-file_types-and-disable_file_types|
   - API                                            |local-highlight-setup-api|
   - Callbacks                                |local-highlight-setup-callbacks|
 6. User Commands                               |local-highlight-user-commands|
@@ -70,7 +70,9 @@ You can setup local-highlight`as follows:`
 
 >lua
     require('local-highlight').setup({
-        file_types = {'python', 'cpp'},
+        file_types = {'python', 'cpp'}, -- If this is given only attach to this
+        -- OR attach to every filetype except:
+        disable_file_types = {'tex'}
         hlgroup = 'Search',
         cw_hlgroup = nil,
     })
@@ -93,15 +95,16 @@ Specify the highlighting group to use for the word under the cursor. Defaults
 to`nil`, which means "Do not apply any highlighting".
 
 
-FILE_TYPES                                  *local-highlight-setup-file_types*
+FILE_TYPES AND DISABLE_FILE_TYPES*local-highlight-setup-file_types-and-disable_file_types*
 
 The plugin works out of the box if you want to use `FileType`s to attach
 tobuffers.
 
 If you do not supply the `file_types` configuration option, `local-highlight`
-willattach by default to all buffers using the `BufRead` autocommand event.If
-you set `file_types` to an empty table, `{}`, `local-highlight` will notattach
-to any buffer on its own, and will leave all attach logic to the user.
+willattach by default to all buffers, except those filetypes specified
+in`disable_file_types` using the `BufRead` autocommand event.If you set
+`file_types` to an empty table, `{}`, `local-highlight` will notattach to any
+buffer on its own, and will leave all attach logic to the user.
 
 
 API                                                *local-highlight-setup-api*
