@@ -7,6 +7,7 @@ local M = {
   regexes = {},
   config = {
     file_types = {},
+    disable_file_types = {},
     hlgroup = 'LocalHighlight',
     cw_hlgroup = nil,
   },
@@ -225,6 +226,11 @@ function M.setup(config)
       group = au,
       pattern = '*.*',
       callback = function(data)
+        if M.config.disable_file_types then
+          if vim.tbl_contains(M.config.disable_file_types, vim.bo.filetype) then
+            return
+          end
+        end
         M.attach(data.buf)
       end,
     })
