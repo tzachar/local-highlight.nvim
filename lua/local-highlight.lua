@@ -221,7 +221,7 @@ function M.setup(config)
         M.attach(data.buf)
       end,
     })
-  elseif config.file_types == nil then
+  elseif M.config.file_types == nil then
     vim.api.nvim_create_autocmd('BufRead', {
       group = au,
       pattern = '*.*',
