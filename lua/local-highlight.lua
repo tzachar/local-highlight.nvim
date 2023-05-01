@@ -6,8 +6,8 @@ local api = vim.api
 local M = {
   regexes = {},
   config = {
-    file_types = {},
-    disable_file_types = {},
+    file_types = nil,
+    disable_file_types = nil,
     hlgroup = 'LocalHighlight',
     cw_hlgroup = nil,
   },
