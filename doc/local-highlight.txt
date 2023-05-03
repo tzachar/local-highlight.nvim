@@ -100,11 +100,17 @@ FILE_TYPES AND DISABLE_FILE_TYPES*local-highlight-setup-file_types-and-disable_f
 The plugin works out of the box if you want to use `FileType`s to attach
 tobuffers.
 
-Both `file_types` and `disable_file_types` are default to `nil`, which means
-`local-highlight` willattach by default to all buffers, except those filetypes
-specified in`disable_file_types` using the `BufRead` autocommand event.If you
-set `file_types` to an empty table, `{}`, `local-highlight` will notattach to
-any buffer on its own, and will leave all attach logic to the user.
+To control this behavior, you have the option of setting the following
+options:`file_types`: `nil` by default, meaning attach to all file types. If
+set to atable, should contain file types relevant to the `FileType`
+autocommand, andwill instruct the plugin to attach only to the specified fule
+types.`disable_file_types`: `nil` by default, meaning no exceptions when
+attaching tobuffers. If set to a table, each fie type specified in the table
+will be skippedwhen attaching to buffers.
+
+If you set `file_types` to an empty table, `{}`, `local-highlight` will
+notattach to any buffer on its own, and will leave all attach logic to the
+user.
 
 
 API                                                *local-highlight-setup-api*
