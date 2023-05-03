@@ -63,9 +63,14 @@ Specify the highlighting group to use for the word under the cursor. Defaults to
 The plugin works out of the box if you want to use `FileType`s to attach to
 buffers.
 
-Both `file_types` and `disable_file_types` are default to `nil`, which means `local-highlight` will
-attach by default to all buffers, except those filetypes specified in
-`disable_file_types` using the `BufRead` autocommand event.
+To control this behavior, you have the option of setting the following options:
+`file_types`: `nil` by default, meaning attach to all file types. If set to a
+table, should contain file types relevant to the `FileType` autocommand, and
+will instruct the plugin to attach only to the specified fule types.
+`disable_file_types`: `nil` by default, meaning no exceptions when attaching to
+buffers. If set to a table, each fie type specified in the table will be skipped
+when attaching to buffers.
+
 If you set `file_types` to an empty table, `{}`, `local-highlight` will not
 attach to any buffer on its own, and will leave all attach logic to the user.
 
