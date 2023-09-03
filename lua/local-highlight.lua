@@ -10,6 +10,7 @@ local M = {
     disable_file_types = nil,
     hlgroup = 'LocalHighlight',
     cw_hlgroup = nil,
+    insert_mode = false,
   },
   timing_info = {},
   usage_count = 0,
@@ -174,20 +175,25 @@ function M.attach(bufnr)
     return
   end
   local au = api.nvim_create_augroup(M.buf_au_group_name(bufnr), { clear = true })
-  api.nvim_create_autocmd({ 'CursorHold' }, {
+  local highlighter_args = {
     group = au,
     buffer = bufnr,
     callback = function()
       M.highlight_usages(bufnr)
     end,
-  })
-  api.nvim_create_autocmd({ 'InsertEnter' }, {
-    group = au,
-    buffer = bufnr,
-    callback = function()
-      M.clear_usage_highlights(bufnr)
-    end,
-  })
+  }
+  api.nvim_create_autocmd({ 'CursorHold' }, highlighter_args)
+  if M.config.insert_mode then
+    api.nvim_create_autocmd({ 'CursorHoldI' }, highlighter_args)
+  else
+    api.nvim_create_autocmd({ 'InsertEnter' }, {
+      group = au,
+      buffer = bufnr,
+      callback = function()
+        M.clear_usage_highlights(bufnr)
+      end,
+    })
+  end
   api.nvim_create_autocmd({ 'BufDelete' }, {
     group = au,
     buffer = bufnr,
