@@ -11,6 +11,7 @@ Table of Contents                          *local-highlight-table-of-contents*
   - hlgroup                                    |local-highlight-setup-hlgroup|
   - cw_hlgroup                              |local-highlight-setup-cw_hlgroup|
   - file_types and disable_file_types|local-highlight-setup-file_types-and-disable_file_types|
+  - insert_mode                            |local-highlight-setup-insert_mode|
   - API                                            |local-highlight-setup-api|
   - Callbacks                                |local-highlight-setup-callbacks|
 6. User Commands                               |local-highlight-user-commands|
@@ -113,6 +114,11 @@ will be skippedwhen attaching to buffers.
 If you set `file_types` to an empty table, `{}`, `local-highlight` will
 notattach to any buffer on its own, and will leave all attach logic to the
 user.
+
+
+INSERT_MODE                                *local-highlight-setup-insert_mode*
+
+If set to `true`, will also work during insert mode.
 
 
 API                                                *local-highlight-setup-api*
