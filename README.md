@@ -76,6 +76,10 @@ when attaching to buffers.
 If you set `file_types` to an empty table, `{}`, `local-highlight` will not
 attach to any buffer on its own, and will leave all attach logic to the user.
 
+## `insert_mode`
+
+If set to `true`, will also work during insert mode.
+
 ## API
 
 If you want to directly attach the plugin to your buffers, you can use any
