@@ -41,7 +41,7 @@ You can setup local-highlight` as follows:`
 require('local-highlight').setup({
     file_types = {'python', 'cpp'}, -- If this is given only attach to this
     -- OR attach to every filetype except:
-    disable_file_types = {'tex'}
+    disable_file_types = {'tex'},
     hlgroup = 'Search',
     cw_hlgroup = nil,
     -- Whether to display highlights in INSERT mode or not
