@@ -12,6 +12,7 @@ Table of Contents                          *local-highlight-table-of-contents*
   - cw_hlgroup                              |local-highlight-setup-cw_hlgroup|
   - file_types and disable_file_types|local-highlight-setup-file_types-and-disable_file_types|
   - insert_mode                            |local-highlight-setup-insert_mode|
+  - min_match_len and max_match_len        |local-highlight-min-max-match-len|
   - API                                            |local-highlight-setup-api|
   - Callbacks                                |local-highlight-setup-callbacks|
 6. User Commands                               |local-highlight-user-commands|
@@ -78,6 +79,8 @@ You can setup local-highlight`as follows:`
         cw_hlgroup = nil,
         -- Whether to display highlights in INSERT mode or not
         insert_mode = false,
+        min_match_len = 2,
+        max_match_len = math.huge,
     })
 <
 
@@ -119,6 +122,11 @@ user.
 INSERT_MODE                                *local-highlight-setup-insert_mode*
 
 If set to `true`, will also work during insert mode.
+
+
+MIN_MATCH_LEN AND MAX_MATCH_LEN            *local-highlight-min-max-match-len*
+
+Set lower and upper limits on the length of the word being matched.
 
 
 API                                                *local-highlight-setup-api*

@@ -11,6 +11,8 @@ local M = {
     hlgroup = 'LocalHighlight',
     cw_hlgroup = nil,
     insert_mode = false,
+    min_match_len = 1,
+    max_match_len = math.huge,
   },
   timing_info = {},
   usage_count = 0,
@@ -72,7 +74,7 @@ function M.highlight_usages(bufnr)
     return
   end
   local curword, curword_start, curword_end = unpack(vim.fn.matchstrpos(line, [[\k*\%]] .. cursor[2] + 1 .. [[c\k*]]))
-  if not curword or #curword == 0 then
+  if not curword or #curword < M.config.min_match_len or #curword > M.config.max_match_len then
     M.clear_usage_highlights(bufnr)
     return
   end
@@ -264,3 +266,4 @@ function M.setup(config)
 end
 
 return M
+
