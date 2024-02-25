@@ -48,6 +48,7 @@ require('local-highlight').setup({
     insert_mode = false,
     min_match_len = 1,
     max_match_len = math.huge,
+    highlight_single_match = true,
 })
 ```
 
@@ -85,6 +86,10 @@ If set to `true`, will also work during insert mode.
 ## `min_match_len` and `max_match_len`
 
 Set lower and upper limits on the length of the word being matched.
+
+## `highlight_single_match`
+
+Set to false to stop highlighting words that only appear once.
 
 ## API
 

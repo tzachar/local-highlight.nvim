@@ -13,6 +13,7 @@ Table of Contents                          *local-highlight-table-of-contents*
   - file_types and disable_file_types|local-highlight-setup-file_types-and-disable_file_types|
   - insert_mode                            |local-highlight-setup-insert_mode|
   - min_match_len and max_match_len|local-highlight-setup-min_match_len-and-max_match_len|
+  - highlight_single_match            |local-highlight-highlight-single-match|
   - API                                            |local-highlight-setup-api|
   - Callbacks                                |local-highlight-setup-callbacks|
 6. User Commands                               |local-highlight-user-commands|
@@ -127,6 +128,11 @@ If set to `true`, will also work during insert mode.
 MIN_MATCH_LEN AND MAX_MATCH_LEN*local-highlight-setup-min_match_len-and-max_match_len*
 
 Set lower and upper limits on the length of the word being matched.
+
+
+HIGHLIGHT_SINGLE_MATCH                *local-highlight-highlight-single-match*
+
+Set to false to stop highlighting words that only appear once.
 
 
 API                                                *local-highlight-setup-api*
