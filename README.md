@@ -46,6 +46,8 @@ require('local-highlight').setup({
     cw_hlgroup = nil,
     -- Whether to display highlights in INSERT mode or not
     insert_mode = false,
+    min_match_len = 1,
+    max_match_len = math.huge,
 })
 ```
 
@@ -79,6 +81,10 @@ attach to any buffer on its own, and will leave all attach logic to the user.
 ## `insert_mode`
 
 If set to `true`, will also work during insert mode.
+
+## `min_match_len` and `max_match_len`
+
+Set lower and upper limits on the length of the word being matched.
 
 ## API
 
