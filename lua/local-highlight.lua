@@ -13,6 +13,7 @@ local M = {
     insert_mode = false,
     min_match_len = 1,
     max_match_len = math.huge,
+    highlight_single_match = true,
   },
   timing_info = {},
   usage_count = 0,
@@ -129,10 +130,12 @@ function M.highlight_usages(bufnr)
     end
   end
 
-  for _, arg in ipairs(args) do
-    vim.highlight.range(unpack(arg))
+  if M.config.highlight_single_match or (not M.config.highlight_single_match and #args > 1) then
+    for _, arg in ipairs(args) do
+      vim.highlight.range(unpack(arg))
+    end
+    M.last_count[bufnr] = #args
   end
-  M.last_count[bufnr] = #args
 
   local time_since_start = vim.fn.reltimefloat(vim.fn.reltime(start_time)) * 1000
   if M.debug_print_usage_every_time then
