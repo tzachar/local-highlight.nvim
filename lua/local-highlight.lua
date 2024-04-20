@@ -130,7 +130,7 @@ function M.highlight_usages(bufnr)
     end
   end
 
-  if M.config.highlight_single_match or (not M.config.highlight_single_match and #args > 1) then
+  if M.config.highlight_single_match or #args > 1 then
     for _, arg in ipairs(args) do
       vim.highlight.range(unpack(arg))
     end
