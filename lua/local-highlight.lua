@@ -225,8 +225,8 @@ end
 
 function M.setup(config)
   setup_highlight_group()
-  vim.api.nvim_create_autocmd("ColorScheme", {
-    pattern = "*",
+  vim.api.nvim_create_autocmd('ColorScheme', {
+    pattern = '*',
     callback = setup_highlight_group,
   })
 
