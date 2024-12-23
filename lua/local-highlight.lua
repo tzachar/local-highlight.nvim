@@ -215,11 +215,19 @@ function M.detach(bufnr)
   M.last_cache[bufnr] = nil
 end
 
-function M.setup(config)
+local function setup_highlight_group()
   vim.api.nvim_set_hl(0, 'LocalHighlight', {
     fg = '#dcd7ba',
     bg = '#2d4f67',
     default = true,
+  })
+end
+
+function M.setup(config)
+  setup_highlight_group()
+  vim.api.nvim_create_autocmd("ColorScheme", {
+    pattern = "*",
+    callback = setup_highlight_group,
   })
 
   M.config = vim.tbl_deep_extend('keep', config or {}, M.config)
