@@ -33,6 +33,13 @@ Multiple plugins to highlight the word under the cursor exist. However, none of 
 1. Performance (especially on large files)
 2. Highlight mechanics: by using extmarks, the current format of each highlighted word remains the same (e.g., italics, treesitter highlights)
 
+# How the Plugin Works
+
+`local-highlight` will attach to a buffer and register an autocommand for the
+`CursorHold` event. Once the event fires, `local-highlight` will grab the word
+under the cursor and will highlight all of the usages of the same word in the
+visible lines of the buffer.
+
 # Setup
 
 You can setup local-highlight` as follows:`
@@ -142,12 +149,7 @@ Turn local highlighting on for the current buffer.
 Echo timing information: total number of invocations and the average running
 time in milliseconds.
 
-# How the Plugin Works
 
-`local-highlight` will attach to a buffer and register an autocommand for the
-`CursorHold` event. Once the event fires, `local-highlight` will grab the word
-under the cursor and will highlight all of the usages of the same word in the
-visible lines of the buffer.
 
 One implication of using `CursorHold` is that interactivity depends on
 `updatetime`, which is 4000 by default. A good advice is to set it to something
