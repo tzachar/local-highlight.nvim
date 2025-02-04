@@ -7,7 +7,8 @@ Table of Contents                          *local-highlight-table-of-contents*
 2. Performance                                   |local-highlight-performance|
 3. install                                           |local-highlight-install|
 4. Why Another Highlight Plugin?|local-highlight-why-another-highlight-plugin?|
-5. Setup                                               |local-highlight-setup|
+5. How the Plugin Works                 |local-highlight-how-the-plugin-works|
+6. Setup                                               |local-highlight-setup|
   - hlgroup                                    |local-highlight-setup-hlgroup|
   - cw_hlgroup                              |local-highlight-setup-cw_hlgroup|
   - file_types and disable_file_types|local-highlight-setup-file_types-and-disable_file_types|
@@ -16,12 +17,11 @@ Table of Contents                          *local-highlight-table-of-contents*
   - highlight_single_match      |local-highlight-setup-highlight_single_match|
   - API                                            |local-highlight-setup-api|
   - Callbacks                                |local-highlight-setup-callbacks|
-6. User Commands                               |local-highlight-user-commands|
+7. User Commands                               |local-highlight-user-commands|
   - LocalHighlightToggle  |local-highlight-user-commands-localhighlighttoggle|
   - LocalHighlightOff        |local-highlight-user-commands-localhighlightoff|
   - LocalHighlightOn          |local-highlight-user-commands-localhighlighton|
   - LocalHighlightStats    |local-highlight-user-commands-localhighlightstats|
-7. How the Plugin Works                 |local-highlight-how-the-plugin-works|
 
 ==============================================================================
 1. local-highlight.nvim                 *local-highlight-local-highlight.nvim*
@@ -67,7 +67,16 @@ each highlighted word remains the same (e.g., italics, treesitter highlights)
 
 
 ==============================================================================
-5. Setup                                               *local-highlight-setup*
+5. How the Plugin Works                 *local-highlight-how-the-plugin-works*
+
+`local-highlight` will attach to a buffer and register an autocommand for
+the`CursorHold` event. Once the event fires, `local-highlight` will grab the
+wordunder the cursor and will highlight all of the usages of the same word in
+thevisible lines of the buffer.
+
+
+==============================================================================
+6. Setup                                               *local-highlight-setup*
 
 You can setup local-highlight`as follows:`
 
@@ -172,7 +181,7 @@ thecurrent buffer.
 
 
 ==============================================================================
-6. User Commands                               *local-highlight-user-commands*
+7. User Commands                               *local-highlight-user-commands*
 
 
 LOCALHIGHLIGHTTOGGLE      *local-highlight-user-commands-localhighlighttoggle*
@@ -194,15 +203,6 @@ LOCALHIGHLIGHTSTATS        *local-highlight-user-commands-localhighlightstats*
 
 Echo timing information: total number of invocations and the average
 runningtime in milliseconds.
-
-
-==============================================================================
-7. How the Plugin Works                 *local-highlight-how-the-plugin-works*
-
-`local-highlight` will attach to a buffer and register an autocommand for
-the`CursorHold` event. Once the event fires, `local-highlight` will grab the
-wordunder the cursor and will highlight all of the usages of the same word in
-thevisible lines of the buffer.
 
 One implication of using `CursorHold` is that interactivity depends
 on`updatetime`, which is 4000 by default. A good advice is to set it to
