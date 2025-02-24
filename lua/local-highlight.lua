@@ -4,19 +4,18 @@
 local api = vim.api
 local vim_hl = (vim.hl or vim.highlight)
 
-
 local function interpolate(start_color, end_color, position)
   -- Function to interpolate between two hex colors
 
   -- Input validation (optional but good practice)
-  if type(start_color) ~= "string" or type(end_color) ~= "string" then
-    error("start_color and end_color must be strings")
+  if type(start_color) ~= 'string' or type(end_color) ~= 'string' then
+    error('start_color and end_color must be strings')
   end
-  if type(position) ~= "number" then
-    error("position must be a number")
+  if type(position) ~= 'number' then
+    error('position must be a number')
   end
   if position < 0 or position > 1 then
-    error("position must be between 0 and 1")
+    error('position must be between 0 and 1')
   end
   if start_color:len() ~= 6 or end_color:len() ~= 6 then
     error("start_color and end_color must be in format 'rrggbb'")
@@ -32,7 +31,7 @@ local function interpolate(start_color, end_color, position)
 
   -- Helper function to convert RGB components to hex color string
   local function rgb_to_hex(r, g, b)
-    return string.format("%02x%02x%02x", r, g, b)
+    return string.format('%02x%02x%02x', r, g, b)
   end
 
   -- Convert start and end colors to RGB components
@@ -53,7 +52,6 @@ local function interpolate(start_color, end_color, position)
   interpolated_g = math.max(0, math.min(255, interpolated_g))
   interpolated_b = math.max(0, math.min(255, interpolated_b))
 
-
   -- Convert interpolated RGB back to hex color string
   local interpolated_color = rgb_to_hex(interpolated_r, interpolated_g, interpolated_b)
 
@@ -63,39 +61,30 @@ end
 local function get_highlight(bufnr, row, col)
   local hl_groups = {}
   local function append(data, priority)
-    table.insert(
-      hl_groups,
-      {
-        data.hl_group_link or data.hl_group,
-        priority
-      }
-    )
-
+    table.insert(hl_groups, {
+      data.hl_group_link or data.hl_group,
+      priority,
+    })
   end
-  local items = vim.inspect_pos(
-    bufnr,
-    row,
-    col,
-    {
-      extmarks = true,
-      semantic_tokens = true,
-      syntax = true,
-      treesitter = true,
-    }
-  )
+  local items = vim.inspect_pos(bufnr, row, col, {
+    extmarks = true,
+    semantic_tokens = true,
+    syntax = true,
+    treesitter = true,
+  })
   if #items.treesitter > 0 then
     for _, capture in ipairs(items.treesitter) do
       append(capture, capture.metadata.priority or vim_hl.priorities.treesitter)
     end
   end
   if #items.semantic_tokens > 0 then
-     for _, extmark in ipairs(items.semantic_tokens) do
-       append(extmark.opts, extmark.opts.priority)
-     end
+    for _, extmark in ipairs(items.semantic_tokens) do
+      append(extmark.opts, extmark.opts.priority)
+    end
   end
   if #items.syntax > 0 then
     for _, syn in ipairs(items.syntax) do
-       append(syn, 0)
+      append(syn, 0)
     end
   end
 
@@ -107,22 +96,21 @@ local function get_highlight(bufnr, row, col)
     end
   end
   if #hl_groups > 0 then
-    table.sort(hl_groups, function (a, b) return a[2] > b[2] end)
+    table.sort(hl_groups, function(a, b)
+      return a[2] > b[2]
+    end)
     for _, g in ipairs(hl_groups) do
-      local x = vim.api.nvim_get_hl(
-        0,
-        {
-          name = g[1],
-          link = false,
-          create = false,
-        }
-      )
+      local x = vim.api.nvim_get_hl(0, {
+        name = g[1],
+        link = false,
+        create = false,
+      })
       if x ~= nil and not vim.tbl_isempty(x) then
         if x.fg then
-          x.fg = string.format("%06x", x.fg)  ---@diagnostic disable-line
+          x.fg = string.format('%06x', x.fg) ---@diagnostic disable-line
         end
         if x.bg then
-          x.bg = string.format("%06x", x.bg)  ---@diagnostic disable-line
+          x.bg = string.format('%06x', x.bg) ---@diagnostic disable-line
         end
         return x
       end
@@ -143,9 +131,9 @@ local M = {
     max_match_len = math.huge,
     highlight_single_match = true,
     animate = {
-      enabled = vim.fn.has("nvim-0.10") == 1 and require('snacks.animate'),
+      enabled = vim.fn.has('nvim-0.10') == 1 and require('snacks.animate'),
       char_by_char = true,
-      easing = "linear",
+      easing = 'linear',
       duration = {
         step = 10, -- ms per step
         total = 100, -- maximum duration
@@ -256,7 +244,7 @@ function M.highlight_usages(bufnr)
             M.config.hlgroup,
             { row, col },
             { row, col + curpattern_len },
-          }
+          },
         })
       elseif row == cursor_range[1] and cursor_range[2] >= col and cursor_range[2] <= col + curpattern_len and M.config.cw_hlgroup then
         table.insert(args, {
@@ -267,7 +255,7 @@ function M.highlight_usages(bufnr)
             M.config.cw_hlgroup,
             { row, col },
             { row, col + curpattern_len },
-          }
+          },
         })
       end
     end
@@ -275,16 +263,12 @@ function M.highlight_usages(bufnr)
 
   if M.config.highlight_single_match or #args > 1 then
     for i, arg in ipairs(args) do
-      if M.config.animate and M.config.animate.enabled and require('snacks.animate').enabled({ buf = bufnr, name = "local_highlight" }) then
+      if M.config.animate and M.config.animate.enabled and require('snacks.animate').enabled({ buf = bufnr, name = 'local_highlight' }) then
         require('snacks.animate')(
           0,
           100,
-          function(value, ctx)  ---@diagnostic disable-line
-            local bg = interpolate(
-              (arg.org_hl and arg.org_hl.bg) or M.config.background,
-              M.config.animate.bg,
-              value / 100.
-            )
+          function(value, ctx) ---@diagnostic disable-line
+            local bg = interpolate((arg.org_hl and arg.org_hl.bg) or M.config.background, M.config.animate.bg, value / 100.)
             vim.api.nvim_set_hl(0, arg.hl_args[3], {
               bg = '#' .. bg,
               default = false,
@@ -295,19 +279,13 @@ function M.highlight_usages(bufnr)
               dump(upto)
             end
             if M.config.animate.char_by_char or ctx.anim.opts.first_time then
-              vim_hl.range(
-                arg.hl_args[1],
-                arg.hl_args[2],
-                arg.hl_args[3],
-                arg.hl_args[4],
-                {arg.hl_args[4][1], arg.hl_args[4][2] + upto}
-              )
-              ctx.anim.opts.first_time = false  ---@diagnostic disable-line
+              vim_hl.range(arg.hl_args[1], arg.hl_args[2], arg.hl_args[3], arg.hl_args[4], { arg.hl_args[4][1], arg.hl_args[4][2] + upto })
+              ctx.anim.opts.first_time = false ---@diagnostic disable-line
             end
           end,
-          vim.tbl_extend("keep", {
+          vim.tbl_extend('keep', {
             int = true,
-            id = "local_highlight_" .. bufnr .. "_" .. i,
+            id = 'local_highlight_' .. bufnr .. '_' .. i,
             buf = bufnr,
             first_time = true,
           }, M.config.animate)
@@ -413,27 +391,21 @@ function M.setup(config)
   })
 
   M.config = vim.tbl_deep_extend('keep', config or {}, M.config)
-  local background = vim.api.nvim_get_hl(
-    0,
-    {
-      create = false,
-      name = 'Normal',
-    }
-  )
+  local background = vim.api.nvim_get_hl(0, {
+    create = false,
+    name = 'Normal',
+  })
   if background ~= nil and not vim.tbl_isempty(background) and background.bg then
-    M.config.background = string.format("%06x", background.bg)
+    M.config.background = string.format('%06x', background.bg)
   else
     M.config.background = '000000'
   end
-  local animate_bg = vim.api.nvim_get_hl(
-    0,
-    {
-      create = false,
-      name = M.config.hlgroup,
-    }
-  )
+  local animate_bg = vim.api.nvim_get_hl(0, {
+    create = false,
+    name = M.config.hlgroup,
+  })
   if animate_bg ~= nil and not vim.tbl_isempty(animate_bg) and animate_bg.bg and M.config.animate then
-    M.config.animate.bg = string.format("%06x", animate_bg.bg)
+    M.config.animate.bg = string.format('%06x', animate_bg.bg)
   elseif M.config.animate then
     M.config.animate.bg = '000000'
   end

@@ -15,6 +15,7 @@ Table of Contents                          *local-highlight-table-of-contents*
   - insert_mode                            |local-highlight-setup-insert_mode|
   - min_match_len and max_match_len|local-highlight-setup-min_match_len-and-max_match_len|
   - highlight_single_match      |local-highlight-setup-highlight_single_match|
+  - animate                                    |local-highlight-setup-animate|
   - API                                            |local-highlight-setup-api|
   - Callbacks                                |local-highlight-setup-callbacks|
 7. User Commands                               |local-highlight-user-commands|
@@ -74,24 +75,37 @@ the`CursorHold` event. Once the event fires, `local-highlight` will grab the
 wordunder the cursor and will highlight all of the usages of the same word in
 thevisible lines of the buffer.
 
+One implication of using `CursorHold` is that interactivity depends
+on`updatetime`, which is 4000 by default. A good advice is to set it to
+somethingmore reasonable, like 100, to get good interactivity.
+
 
 ==============================================================================
 6. Setup                                               *local-highlight-setup*
 
-You can setup local-highlight`as follows:`
+You can setup local-highlight `as follows:`
 
 >lua
     require('local-highlight').setup({
         file_types = {'python', 'cpp'}, -- If this is given only attach to this
         -- OR attach to every filetype except:
         disable_file_types = {'tex'},
-        hlgroup = 'Search',
+        hlgroup = 'LocalHighlight',
         cw_hlgroup = nil,
         -- Whether to display highlights in INSERT mode or not
         insert_mode = false,
         min_match_len = 1,
         max_match_len = math.huge,
         highlight_single_match = true,
+        animate = {
+          enabled = vim.fn.has("nvim-0.10") == 1 and require('snacks.animate'),
+          char_by_char = true,
+          easing = "linear",
+          duration = {
+            step = 10, -- ms per step
+            total = 100, -- maximum duration
+          },
+        },
     })
 <
 
@@ -103,7 +117,7 @@ Specify the highlighting group to use.
 By default, `local-highlight` will use the `LocalHighlight` highlight group,
 which it defines upon startup. If the group is already defined elsewhere in
 your config then it will not be overwritten. You can also use any other group
-you desire, e.g., see above where `Search` is used.
+you desire.
 
 
 CW_HLGROUP                                  *local-highlight-setup-cw_hlgroup*
@@ -143,6 +157,22 @@ Set lower and upper limits on the length of the word being matched.
 HIGHLIGHT_SINGLE_MATCH          *local-highlight-setup-highlight_single_match*
 
 Set to false to stop highlighting words that only appear once.
+
+
+ANIMATE                                        *local-highlight-setup-animate*
+
+If you have snacks.nvim <https://github.com/folke/snacks.nvim>
+installed,`local-highligh` will use `Snacks.animate` by default. In this case,
+only the**background** specified in `hlgroup` will be used.
+
+To disable animation regardless of `snacks`, just set `enabled = false`.
+Allother arguments are the same as for `Snacks.animate`.
+
+
+CHAR_BY_CHAR ~
+
+By default, animation is done charachter by character. Set to `false` to
+animatethe entire word as a whole.
 
 
 API                                                *local-highlight-setup-api*
@@ -203,10 +233,6 @@ LOCALHIGHLIGHTSTATS        *local-highlight-user-commands-localhighlightstats*
 
 Echo timing information: total number of invocations and the average
 runningtime in milliseconds.
-
-One implication of using `CursorHold` is that interactivity depends
-on`updatetime`, which is 4000 by default. A good advice is to set it to
-somethingmore reasonable, like 500, to get good interactivity.
 
 ==============================================================================
 8. Links                                               *local-highlight-links*
