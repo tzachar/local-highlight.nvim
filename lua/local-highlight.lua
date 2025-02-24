@@ -2,6 +2,7 @@
 -- definition on cursor hold.
 
 local api = vim.api
+local vim_hl = (vim.hl or vim.highlight)
 
 
 local function interpolate(start_color, end_color, position)
@@ -84,7 +85,7 @@ local function get_highlight(bufnr, row, col)
   )
   if #items.treesitter > 0 then
     for _, capture in ipairs(items.treesitter) do
-      append(capture, capture.metadata.priority or vim.hl.priorities.treesitter)
+      append(capture, capture.metadata.priority or vim_hl.priorities.treesitter)
     end
   end
   if #items.semantic_tokens > 0 then
@@ -294,8 +295,7 @@ function M.highlight_usages(bufnr)
               dump(upto)
             end
             if M.config.animate.char_by_char or ctx.anim.opts.first_time then
-              -- vim.hl.range(unpack(arg.hl_args))
-              vim.hl.range(
+              vim_hl.range(
                 arg.hl_args[1],
                 arg.hl_args[2],
                 arg.hl_args[3],
@@ -313,10 +313,10 @@ function M.highlight_usages(bufnr)
           }, M.config.animate)
         )
       else
-        vim.hl.range(unpack(arg.hl_args))
+        vim_hl.range(unpack(arg.hl_args))
       end
+      M.last_count[bufnr] = #args
     end
-    M.last_count[bufnr] = #args
   end
 
   local time_since_start = vim.fn.reltimefloat(vim.fn.reltime(start_time)) * 1000
