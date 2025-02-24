@@ -276,7 +276,6 @@ function M.highlight_usages(bufnr)
             local upto = curpattern_len
             if M.config.animate.char_by_char then
               upto = math.floor(value * curpattern_len / 100. + 0.5)
-              dump(upto)
             end
             if M.config.animate.char_by_char or ctx.anim.opts.first_time then
               vim_hl.range(arg.hl_args[1], arg.hl_args[2], arg.hl_args[3], arg.hl_args[4], { arg.hl_args[4][1], arg.hl_args[4][2] + upto })
