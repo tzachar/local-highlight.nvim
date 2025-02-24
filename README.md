@@ -62,8 +62,8 @@ require('local-highlight').setup({
     highlight_single_match = true,
     animate = {
       enabled = vim.fn.has("nvim-0.10") == 1 and require('snacks.animate'),
+      char_by_char = true,
       easing = "linear",
-      bg = "2d4f67",
       duration = {
         step = 10, -- ms per step
         total = 100, -- maximum duration
@@ -119,6 +119,11 @@ If you have [snacks.nvim](https://github.com/folke/snacks.nvim) installed,
 
 To disable animation regardless of `snacks`, just set `enabled = false`. All
 other arguments are the same as for `Snacks.animate`.
+
+### `char_by_char`
+
+By default, animation is done charachter by character. Set to `false` to animate
+the entire word as a whole.
 
 ## API
 

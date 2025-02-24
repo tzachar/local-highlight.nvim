@@ -143,6 +143,7 @@ local M = {
     highlight_single_match = true,
     animate = {
       enabled = vim.fn.has("nvim-0.10") == 1 and require('snacks.animate'),
+      char_by_char = true,
       easing = "linear",
       duration = {
         step = 10, -- ms per step
@@ -287,8 +288,20 @@ function M.highlight_usages(bufnr)
               bg = '#' .. bg,
               default = false,
             })
-            if ctx.anim.opts.first_time then
-              vim.hl.range(unpack(arg.hl_args))
+            local upto = curpattern_len
+            if M.config.animate.char_by_char then
+              upto = math.floor(value * curpattern_len / 100. + 0.5)
+              dump(upto)
+            end
+            if M.config.animate.char_by_char or ctx.anim.opts.first_time then
+              -- vim.hl.range(unpack(arg.hl_args))
+              vim.hl.range(
+                arg.hl_args[1],
+                arg.hl_args[2],
+                arg.hl_args[3],
+                arg.hl_args[4],
+                {arg.hl_args[4][1], arg.hl_args[4][2] + upto}
+              )
               ctx.anim.opts.first_time = false  ---@diagnostic disable-line
             end
           end,
@@ -423,6 +436,9 @@ function M.setup(config)
     M.config.animate.bg = string.format("%06x", animate_bg.bg)
   elseif M.config.animate then
     M.config.animate.bg = '000000'
+  end
+  if not M.config.animate then
+    M.config.animate = { enabled = false }
   end
   local au = api.nvim_create_augroup('Highlight_usages_in_window', { clear = true })
   if M.config.file_types and #M.config.file_types > 0 then
