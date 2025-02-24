@@ -40,22 +40,35 @@ Multiple plugins to highlight the word under the cursor exist. However, none of 
 under the cursor and will highlight all of the usages of the same word in the
 visible lines of the buffer.
 
+One implication of using `CursorHold` is that interactivity depends on
+`updatetime`, which is 4000 by default. A good advice is to set it to something
+more reasonable, like 100, to get good interactivity.
+
 # Setup
 
-You can setup local-highlight` as follows:`
+You can setup local-highlight `as follows:`
 
 ```lua
 require('local-highlight').setup({
     file_types = {'python', 'cpp'}, -- If this is given only attach to this
     -- OR attach to every filetype except:
     disable_file_types = {'tex'},
-    hlgroup = 'Search',
+    hlgroup = 'LocalHighlight',
     cw_hlgroup = nil,
     -- Whether to display highlights in INSERT mode or not
     insert_mode = false,
     min_match_len = 1,
     max_match_len = math.huge,
     highlight_single_match = true,
+    animate = {
+      enabled = vim.fn.has("nvim-0.10") == 1 and require('snacks.animate'),
+      char_by_char = true,
+      easing = "linear",
+      duration = {
+        step = 10, -- ms per step
+        total = 100, -- maximum duration
+      },
+    },
 })
 ```
 
@@ -63,7 +76,7 @@ require('local-highlight').setup({
 
 Specify the highlighting group to use.
 
-By default, `local-highlight` will use the `LocalHighlight` highlight group, which it defines upon startup. If the group is already defined elsewhere in your config then it will not be overwritten. You can also use any other group you desire, e.g., see above where `Search` is used.
+By default, `local-highlight` will use the `LocalHighlight` highlight group, which it defines upon startup. If the group is already defined elsewhere in your config then it will not be overwritten. You can also use any other group you desire.
 
 ## `cw_hlgroup`
 
@@ -97,6 +110,20 @@ Set lower and upper limits on the length of the word being matched.
 ## `highlight_single_match`
 
 Set to false to stop highlighting words that only appear once.
+
+## `animate`
+
+If you have [snacks.nvim](https://github.com/folke/snacks.nvim) installed,
+`local-highligh` will use `Snacks.animate` by default. In this case, only the
+**background** specified in `hlgroup` will be used.
+
+To disable animation regardless of `snacks`, just set `enabled = false`. All
+other arguments are the same as for `Snacks.animate`.
+
+### `char_by_char`
+
+By default, animation is done charachter by character. Set to `false` to animate
+the entire word as a whole.
 
 ## API
 
@@ -148,9 +175,3 @@ Turn local highlighting on for the current buffer.
 
 Echo timing information: total number of invocations and the average running
 time in milliseconds.
-
-
-
-One implication of using `CursorHold` is that interactivity depends on
-`updatetime`, which is 4000 by default. A good advice is to set it to something
-more reasonable, like 500, to get good interactivity.
