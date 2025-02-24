@@ -132,7 +132,7 @@ function M.highlight_usages(bufnr)
 
   if M.config.highlight_single_match or #args > 1 then
     for _, arg in ipairs(args) do
-      vim.highlight.range(unpack(arg))
+      vim.hl.range(unpack(arg))
     end
     M.last_count[bufnr] = #args
   end
