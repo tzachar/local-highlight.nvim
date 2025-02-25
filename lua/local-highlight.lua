@@ -127,12 +127,12 @@ function M.regex(pattern)
     return ret
   end
   ret = vim.regex(pattern)
-  if #M.regexes.cache > 1000 then
+  if #M.regexes.order > 1000 then
     local last = table.remove(M.regexes.order, 1)
     M.regexes.cache[last] = nil
-    M.regexes.cache[pattern] = ret
-    table.insert(M.regexes.order, ret)
   end
+  M.regexes.cache[pattern] = ret
+  table.insert(M.regexes.order, ret)
 
   return ret
 end
