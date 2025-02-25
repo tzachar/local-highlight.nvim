@@ -11,6 +11,7 @@ Table of Contents                          *local-highlight-table-of-contents*
 6. Setup                                               |local-highlight-setup|
   - hlgroup                                    |local-highlight-setup-hlgroup|
   - cw_hlgroup                              |local-highlight-setup-cw_hlgroup|
+  - debounce_timeout                  |local-highlight-setup-debounce_timeout|
   - file_types and disable_file_types|local-highlight-setup-file_types-and-disable_file_types|
   - insert_mode                            |local-highlight-setup-insert_mode|
   - min_match_len and max_match_len|local-highlight-setup-min_match_len-and-max_match_len|
@@ -71,13 +72,10 @@ each highlighted word remains the same (e.g., italics, treesitter highlights)
 5. How the Plugin Works                 *local-highlight-how-the-plugin-works*
 
 `local-highlight` will attach to a buffer and register an autocommand for
-the`CursorHold` event. Once the event fires, `local-highlight` will grab the
-wordunder the cursor and will highlight all of the usages of the same word in
-thevisible lines of the buffer.
-
-One implication of using `CursorHold` is that interactivity depends
-on`updatetime`, which is 4000 by default. A good advice is to set it to
-somethingmore reasonable, like 100, to get good interactivity.
+the`CursorMoved` event. Once the event fires, and after
+`debounce_timeout`milliseconds, `local-highlight` will grab the wordunder the
+cursor and will highlight all of the usages of the same word in thevisible
+lines of the buffer.
 
 
 ==============================================================================
@@ -98,7 +96,7 @@ You can setup local-highlight `as follows:`
         max_match_len = math.huge,
         highlight_single_match = true,
         animate = {
-          enabled = vim.fn.has("nvim-0.10") == 1 and require('snacks.animate'),
+          enabled = true,
           char_by_char = true,
           easing = "linear",
           duration = {
@@ -106,6 +104,7 @@ You can setup local-highlight `as follows:`
             total = 100, -- maximum duration
           },
         },
+        debounce_timeout = 200,
     })
 <
 
@@ -124,6 +123,14 @@ CW_HLGROUP                                  *local-highlight-setup-cw_hlgroup*
 
 Specify the highlighting group to use for the word under the cursor. Defaults
 to`nil`, which means "Do not apply any highlighting".
+
+
+DEBOUNCE_TIMEOUT                      *local-highlight-setup-debounce_timeout*
+
+The number of milliseconds to wait after a `CursorMoved` event fires to
+startthe highlighting process. The default is `200`, meaning that we will only
+starthighligting `200` milliseconds after the last `CursorMoved` event (last
+meaningall other events were less than `200` milliseconds apart).
 
 
 FILE_TYPES AND DISABLE_FILE_TYPES*local-highlight-setup-file_types-and-disable_file_types*
@@ -161,9 +168,10 @@ Set to false to stop highlighting words that only appear once.
 
 ANIMATE                                        *local-highlight-setup-animate*
 
-If you have snacks.nvim <https://github.com/folke/snacks.nvim>
-installed,`local-highligh` will use `Snacks.animate` by default. In this case,
-only the**background** specified in `hlgroup` will be used.
+If you have snacks.nvim <https://github.com/folke/snacks.nvim> installed andare
+using at least `nvim-0.10`, `local-highligh` will use `Snacks.animate` by
+default. In this case, only the**background** specified in `hlgroup` will be
+used.
 
 To disable animation regardless of `snacks`, just set `enabled = false`.
 Allother arguments are the same as for `Snacks.animate`.

@@ -304,15 +304,11 @@ function M.attach(bufnr)
         M.debounce_timer:close()
       end
       M.debounce_timer = (vim.uv or vim.loop).new_timer()
-      M.debounce_timer:start(
-        M.debounce_timeout,
-        0,
-        function ()
-          vim.schedule(function ()
-            M.highlight_usages(bufnr)
-          end)
-        end
-      )
+      M.debounce_timer:start(M.debounce_timeout, 0, function()
+        vim.schedule(function()
+          M.highlight_usages(bufnr)
+        end)
+      end)
     end,
   }
   api.nvim_create_autocmd({ 'CursorMoved', 'WinScrolled' }, highlighter_args)
@@ -382,18 +378,15 @@ function M.setup(config)
   if M.config.animate and M.config.animate.enabled then
     local err = {}
     if not vim.fn.has('nvim-0.10') == 1 then
-      table.insert(err, "local-highligh.nvim only supports animation on nvim-0.10 onwards")
+      table.insert(err, 'local-highligh.nvim only supports animation on nvim-0.10 onwards')
     end
 
     if not pcall(require, 'snacks.animate') then
-      table.insert(err, "local-highligh.nvim only supports animation if snacks.nvim is installed")
+      table.insert(err, 'local-highligh.nvim only supports animation if snacks.nvim is installed')
     end
     if not vim.tbl_isempty(err) then
       M.config.animate = nil
-      vim.notify(
-        table.concat(err, '\n'),
-        vim.log.levels.ERROR
-      )
+      vim.notify(table.concat(err, '\n'), vim.log.levels.ERROR)
     end
   end
 
