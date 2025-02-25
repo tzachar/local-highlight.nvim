@@ -59,7 +59,10 @@ local function interpolate(start_color, end_color, position)
 end
 
 local M = {
-  regexes = {},
+  regexes = {
+    cache = {},
+    order = {},
+  },
   config = {
     file_types = nil,
     disable_file_types = nil,
@@ -119,14 +122,16 @@ Average Running Time : %f msec
 end
 
 function M.regex(pattern)
-  local ret = M.regexes[pattern]
+  local ret = M.regexes.cache[pattern]
   if ret ~= nil then
     return ret
   end
   ret = vim.regex(pattern)
-  if #M.regexes > 1000 then
-    table.remove(M.regexes, 1)
-    table.insert(M.regexes, ret)
+  if #M.regexes.cache > 1000 then
+    local last = table.remove(M.regexes.order, 1)
+    M.regexes.cache[last] = nil
+    M.regexes.cache[pattern] = ret
+    table.insert(M.regexes.order, ret)
   end
 
   return ret
@@ -159,8 +164,6 @@ function M.highlight_usages(bufnr)
       col_end = curword_end,
     }
   end
-
-  M.clear_usage_highlights(bufnr)
 
   -- dumb find all matches of the word
   -- matching whole word ('\<' and '\>')
@@ -195,6 +198,8 @@ function M.highlight_usages(bufnr)
       end
     end
   end
+
+  M.clear_usage_highlights(bufnr)
 
   if M.config.highlight_single_match or #args > 1 then
     -- animate the fade in effect independantly
