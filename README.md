@@ -36,13 +36,10 @@ Multiple plugins to highlight the word under the cursor exist. However, none of 
 # How the Plugin Works
 
 `local-highlight` will attach to a buffer and register an autocommand for the
-`CursorHold` event. Once the event fires, `local-highlight` will grab the word
+`CursorMoved` event. Once the event fires, and after `debounce_timeout`
+milliseconds, `local-highlight` will grab the word
 under the cursor and will highlight all of the usages of the same word in the
 visible lines of the buffer.
-
-One implication of using `CursorHold` is that interactivity depends on
-`updatetime`, which is 4000 by default. A good advice is to set it to something
-more reasonable, like 100, to get good interactivity.
 
 # Setup
 
@@ -61,7 +58,7 @@ require('local-highlight').setup({
     max_match_len = math.huge,
     highlight_single_match = true,
     animate = {
-      enabled = vim.fn.has("nvim-0.10") == 1 and require('snacks.animate'),
+      enabled = true,
       char_by_char = true,
       easing = "linear",
       duration = {
@@ -69,6 +66,7 @@ require('local-highlight').setup({
         total = 100, -- maximum duration
       },
     },
+    debounce_timeout = 200,
 })
 ```
 
@@ -82,6 +80,13 @@ By default, `local-highlight` will use the `LocalHighlight` highlight group, whi
 
 Specify the highlighting group to use for the word under the cursor. Defaults to
 `nil`, which means "Do not apply any highlighting".
+
+## `debounce_timeout`
+
+The number of milliseconds to wait after a `CursorMoved` event fires to start
+the highlighting process. The default is `200`, meaning that we will only start
+highligting `200` milliseconds after the last `CursorMoved` event (last meaning
+all other events were less than `200` milliseconds apart).
 
 ## `file_types` and `disable_file_types`
 
@@ -113,8 +118,8 @@ Set to false to stop highlighting words that only appear once.
 
 ## `animate`
 
-If you have [snacks.nvim](https://github.com/folke/snacks.nvim) installed,
-`local-highligh` will use `Snacks.animate` by default. In this case, only the
+If you have [snacks.nvim](https://github.com/folke/snacks.nvim) installed and
+are using at least `nvim-0.10`, `local-highligh` will use `Snacks.animate` by default. In this case, only the
 **background** specified in `hlgroup` will be used.
 
 To disable animation regardless of `snacks`, just set `enabled = false`. All

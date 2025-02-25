@@ -58,67 +58,6 @@ local function interpolate(start_color, end_color, position)
   return interpolated_color
 end
 
-local function get_highlight(bufnr, row, col)
-  local hl_groups = {}
-  local function append(data, priority)
-    table.insert(hl_groups, {
-      data.hl_group_link or data.hl_group,
-      priority,
-    })
-  end
-  local items = vim.inspect_pos(bufnr, row, col, {
-    extmarks = true,
-    semantic_tokens = true,
-    syntax = true,
-    treesitter = true,
-  })
-  if #items.treesitter > 0 then
-    for _, capture in ipairs(items.treesitter) do
-      append(capture, capture.metadata.priority or vim_hl.priorities.treesitter)
-    end
-  end
-  if #items.semantic_tokens > 0 then
-    for _, extmark in ipairs(items.semantic_tokens) do
-      append(extmark.opts, extmark.opts.priority)
-    end
-  end
-  if #items.syntax > 0 then
-    for _, syn in ipairs(items.syntax) do
-      append(syn, 0)
-    end
-  end
-
-  if #items.extmarks > 0 then
-    for _, extmark in ipairs(items.extmarks) do
-      if extmark.opts.hl_group then
-        append(extmark.opts, 0)
-      end
-    end
-  end
-  if #hl_groups > 0 then
-    table.sort(hl_groups, function(a, b)
-      return a[2] > b[2]
-    end)
-    for _, g in ipairs(hl_groups) do
-      local x = vim.api.nvim_get_hl(0, {
-        name = g[1],
-        link = false,
-        create = false,
-      })
-      if x ~= nil and not vim.tbl_isempty(x) then
-        if x.fg then
-          x.fg = string.format('%06x', x.fg) ---@diagnostic disable-line
-        end
-        if x.bg then
-          x.bg = string.format('%06x', x.bg) ---@diagnostic disable-line
-        end
-        return x
-      end
-    end
-  end
-  return nil -- No highlight group found at the cursor position
-end
-
 local M = {
   regexes = {},
   config = {
@@ -131,7 +70,7 @@ local M = {
     max_match_len = math.huge,
     highlight_single_match = true,
     animate = {
-      enabled = vim.fn.has('nvim-0.10') == 1 and require('snacks.animate'),
+      enabled = true,
       char_by_char = true,
       easing = 'linear',
       duration = {
@@ -145,6 +84,8 @@ local M = {
   debug_print_usage_every_time = false,
   last_cache = {},
   last_count = {},
+  debounce_timeout = 200,
+  debounce_timer = nil,
 }
 
 local usage_namespace = api.nvim_create_namespace('highlight_usages_in_window')
@@ -237,48 +178,63 @@ function M.highlight_usages(bufnr)
     for _, col in ipairs(matches) do
       if row ~= cursor_range[1] or cursor_range[2] < col or cursor_range[2] > col + curpattern_len then
         table.insert(args, {
-          org_hl = get_highlight(bufnr, row, col),
-          hl_args = {
-            bufnr,
-            usage_namespace,
-            M.config.hlgroup,
-            { row, col },
-            { row, col + curpattern_len },
-          },
+          bufnr,
+          usage_namespace,
+          M.config.hlgroup,
+          { row, col },
+          { row, col + curpattern_len },
         })
       elseif row == cursor_range[1] and cursor_range[2] >= col and cursor_range[2] <= col + curpattern_len and M.config.cw_hlgroup then
         table.insert(args, {
-          org_hl = get_highlight(bufnr, row, col),
-          hl_args = {
-            bufnr,
-            usage_namespace,
-            M.config.cw_hlgroup,
-            { row, col },
-            { row, col + curpattern_len },
-          },
+          bufnr,
+          usage_namespace,
+          M.config.cw_hlgroup,
+          { row, col },
+          { row, col + curpattern_len },
         })
       end
     end
   end
 
   if M.config.highlight_single_match or #args > 1 then
+    -- animate the fade in effect independantly
+    if M.config.animate and M.config.animate.enabled and require('snacks.animate').enabled({ buf = bufnr, name = 'local_highlight' }) then
+      require('snacks.animate')(
+        0,
+        100,
+        function(value, ctx) ---@diagnostic disable-line
+          local bg = interpolate(M.config.background, M.config.animate.bg, value / 100.)
+          vim.api.nvim_set_hl(0, M.config.hlgroup, {
+            bg = '#' .. bg,
+            default = false,
+          })
+          if M.config.cw_hlgroup then
+            vim.api.nvim_set_hl(0, M.config.cw_hlgroup, {
+              bg = '#' .. bg,
+              default = false,
+            })
+          end
+        end,
+        vim.tbl_extend('keep', {
+          int = true,
+          id = 'local_highlight_' .. bufnr,
+          buf = bufnr,
+        }, M.config.animate)
+      )
+    end
+
     for i, arg in ipairs(args) do
       if M.config.animate and M.config.animate.enabled and require('snacks.animate').enabled({ buf = bufnr, name = 'local_highlight' }) then
         require('snacks.animate')(
           0,
           100,
           function(value, ctx) ---@diagnostic disable-line
-            local bg = interpolate((arg.org_hl and arg.org_hl.bg) or M.config.background, M.config.animate.bg, value / 100.)
-            vim.api.nvim_set_hl(0, arg.hl_args[3], {
-              bg = '#' .. bg,
-              default = false,
-            })
             local upto = curpattern_len
             if M.config.animate.char_by_char then
               upto = math.floor(value * curpattern_len / 100. + 0.5)
             end
             if M.config.animate.char_by_char or ctx.anim.opts.first_time then
-              vim_hl.range(arg.hl_args[1], arg.hl_args[2], arg.hl_args[3], arg.hl_args[4], { arg.hl_args[4][1], arg.hl_args[4][2] + upto })
+              vim_hl.range(arg[1], arg[2], arg[3], arg[4], { arg[4][1], arg[4][2] + upto })
               ctx.anim.opts.first_time = false ---@diagnostic disable-line
             end
           end,
@@ -290,7 +246,7 @@ function M.highlight_usages(bufnr)
           }, M.config.animate)
         )
       else
-        vim_hl.range(unpack(arg.hl_args))
+        vim_hl.range(unpack(arg))
       end
       M.last_count[bufnr] = #args
     end
@@ -343,12 +299,25 @@ function M.attach(bufnr)
     group = au,
     buffer = bufnr,
     callback = function()
-      M.highlight_usages(bufnr)
+      if M.debounce_timer then
+        M.debounce_timer:stop()
+        M.debounce_timer:close()
+      end
+      M.debounce_timer = (vim.uv or vim.loop).new_timer()
+      M.debounce_timer:start(
+        M.debounce_timeout,
+        0,
+        function ()
+          vim.schedule(function ()
+            M.highlight_usages(bufnr)
+          end)
+        end
+      )
     end,
   }
-  api.nvim_create_autocmd({ 'CursorHold' }, highlighter_args)
+  api.nvim_create_autocmd({ 'CursorMoved', 'WinScrolled' }, highlighter_args)
   if M.config.insert_mode then
-    api.nvim_create_autocmd({ 'CursorHoldI' }, highlighter_args)
+    api.nvim_create_autocmd({ 'CursorMovedI' }, highlighter_args)
   else
     api.nvim_create_autocmd({ 'InsertEnter' }, {
       group = au,
@@ -408,6 +377,26 @@ function M.setup(config)
   elseif M.config.animate then
     M.config.animate.bg = '000000'
   end
+
+  -- check if we can use animation
+  if M.config.animate and M.config.animate.enabled then
+    local err = {}
+    if not vim.fn.has('nvim-0.10') == 1 then
+      table.insert(err, "local-highligh.nvim only supports animation on nvim-0.10 onwards")
+    end
+
+    if not pcall(require, 'snacks.animate') then
+      table.insert(err, "local-highligh.nvim only supports animation if snacks.nvim is installed")
+    end
+    if not vim.tbl_isempty(err) then
+      M.config.animate = nil
+      vim.notify(
+        table.concat(err, '\n'),
+        vim.log.levels.ERROR
+      )
+    end
+  end
+
   if not M.config.animate then
     M.config.animate = { enabled = false }
   end
