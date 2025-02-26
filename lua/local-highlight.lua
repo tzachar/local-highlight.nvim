@@ -4,60 +4,6 @@
 local api = vim.api
 local vim_hl = (vim.hl or vim.highlight)
 
-local function interpolate(start_color, end_color, position)
-  -- Function to interpolate between two hex colors
-
-  -- Input validation (optional but good practice)
-  if type(start_color) ~= 'string' or type(end_color) ~= 'string' then
-    error('start_color and end_color must be strings')
-  end
-  if type(position) ~= 'number' then
-    error('position must be a number')
-  end
-  if position < 0 or position > 1 then
-    error('position must be between 0 and 1')
-  end
-  if start_color:len() ~= 6 or end_color:len() ~= 6 then
-    error("start_color and end_color must be in format 'rrggbb'")
-  end
-
-  -- Helper function to convert hex color string to RGB components
-  local function hex_to_rgb(hex_color)
-    local r_hex = hex_color:sub(1, 2)
-    local g_hex = hex_color:sub(3, 4)
-    local b_hex = hex_color:sub(5, 6)
-    return tonumber(r_hex, 16), tonumber(g_hex, 16), tonumber(b_hex, 16)
-  end
-
-  -- Helper function to convert RGB components to hex color string
-  local function rgb_to_hex(r, g, b)
-    return string.format('%02x%02x%02x', r, g, b)
-  end
-
-  -- Convert start and end colors to RGB components
-  local start_r, start_g, start_b = hex_to_rgb(start_color)
-  local end_r, end_g, end_b = hex_to_rgb(end_color)
-
-  -- Interpolate each RGB component
-  local interpolated_r = start_r + (end_r - start_r) * position
-  local interpolated_g = start_g + (end_g - start_g) * position
-  local interpolated_b = start_b + (end_b - start_b) * position
-
-  -- Ensure RGB values are within the valid range (0-255)
-  interpolated_r = math.floor(interpolated_r + 0.5) -- Round to nearest integer
-  interpolated_g = math.floor(interpolated_g + 0.5)
-  interpolated_b = math.floor(interpolated_b + 0.5)
-
-  interpolated_r = math.max(0, math.min(255, interpolated_r))
-  interpolated_g = math.max(0, math.min(255, interpolated_g))
-  interpolated_b = math.max(0, math.min(255, interpolated_b))
-
-  -- Convert interpolated RGB back to hex color string
-  local interpolated_color = rgb_to_hex(interpolated_r, interpolated_g, interpolated_b)
-
-  return interpolated_color
-end
-
 local M = {
   regexes = {
     cache = {},
@@ -152,6 +98,7 @@ function M.highlight_usages(bufnr)
   end
   local topline, botline = vim.fn.line('w0') - 1, vim.fn.line('w$')
   -- Don't calculate usages again if we are on the same word.
+  local prev_cache = M.last_cache[bufnr]
   if M.last_cache[bufnr] and curword == M.last_cache[bufnr].curword and topline == M.last_cache[bufnr].topline and botline == M.last_cache[bufnr].botline and cursor[1] == M.last_cache[bufnr].row and cursor[2] >= M.last_cache[bufnr].col_start and cursor[2] <= M.last_cache[bufnr].col_end and M.has_highlights(bufnr) then
     return
   else
@@ -162,8 +109,14 @@ function M.highlight_usages(bufnr)
       row = cursor[1],
       col_start = curword_start,
       col_end = curword_end,
+      matches = {}
     }
+    if prev_cache and curword ~= prev_cache.curword then
+      prev_cache = nil
+    end
   end
+
+  local current_cache =  M.last_cache[bufnr]
 
   -- dumb find all matches of the word
   -- matching whole word ('\<' and '\>')
@@ -175,60 +128,42 @@ function M.highlight_usages(bufnr)
     return
   end
 
-  local args = {}
+  M.clear_usage_highlights(bufnr)
+
+  local total_matches = 0
   for row = topline, botline - 1 do
     local matches = all_matches(bufnr, regex, row)
     for _, col in ipairs(matches) do
-      if row ~= cursor_range[1] or cursor_range[2] < col or cursor_range[2] > col + curpattern_len then
-        table.insert(args, {
-          bufnr,
-          usage_namespace,
-          M.config.hlgroup,
-          { row, col },
-          { row, col + curpattern_len },
-        })
-      elseif row == cursor_range[1] and cursor_range[2] >= col and cursor_range[2] <= col + curpattern_len and M.config.cw_hlgroup then
-        table.insert(args, {
-          bufnr,
-          usage_namespace,
-          M.config.cw_hlgroup,
-          { row, col },
-          { row, col + curpattern_len },
-        })
-      end
+      total_matches = total_matches + 1
+      local hash = row .. '_' .. col
+      local hl_group = (
+        (row ~= cursor_range[1] or cursor_range[2] < col or cursor_range[2] > col + curpattern_len) and M.config.hlgroup
+      ) or M.config.cw_hlgroup
+      local id = (prev_cache and prev_cache.matches[hash] and prev_cache.matches[hash].id) or vim.api.nvim_buf_set_extmark(
+        bufnr,
+        usage_namespace,
+        row,
+        col,
+        {
+          end_row = row,
+          end_col = col + 1,
+          hl_group = hl_group,
+          priority = 200,
+          strict = false,
+        }
+      )
+      current_cache.matches[hash] = {
+        id = id,
+        len = 0,
+        row = row,
+        col = col,
+        hl_group = hl_group,
+      }
     end
   end
 
-  M.clear_usage_highlights(bufnr)
-
-  if M.config.highlight_single_match or #args > 1 then
-    -- animate the fade in effect independantly
-    if M.config.animate and M.config.animate.enabled and require('snacks.animate').enabled({ buf = bufnr, name = 'local_highlight' }) then
-      require('snacks.animate')(
-        0,
-        100,
-        function(value, ctx) ---@diagnostic disable-line
-          local bg = interpolate(M.config.background, M.config.animate.bg, value / 100.)
-          vim.api.nvim_set_hl(0, M.config.hlgroup, {
-            bg = '#' .. bg,
-            default = false,
-          })
-          if M.config.cw_hlgroup then
-            vim.api.nvim_set_hl(0, M.config.cw_hlgroup, {
-              bg = '#' .. bg,
-              default = false,
-            })
-          end
-        end,
-        vim.tbl_extend('keep', {
-          int = true,
-          id = 'local_highlight_' .. bufnr,
-          buf = bufnr,
-        }, M.config.animate)
-      )
-    end
-
-    for i, arg in ipairs(args) do
+  if M.config.highlight_single_match or total_matches > 1 then
+    for hash, arg in pairs(current_cache.matches) do
       if M.config.animate and M.config.animate.enabled and require('snacks.animate').enabled({ buf = bufnr, name = 'local_highlight' }) then
         require('snacks.animate')(
           0,
@@ -237,23 +172,38 @@ function M.highlight_usages(bufnr)
             local upto = curpattern_len
             if M.config.animate.char_by_char then
               upto = math.floor(value * curpattern_len / 100. + 0.5)
+              upto = math.max(1, upto)
             end
-            if M.config.animate.char_by_char or ctx.anim.opts.first_time then
-              vim_hl.range(arg[1], arg[2], arg[3], arg[4], { arg[4][1], arg[4][2] + upto })
-              ctx.anim.opts.first_time = false ---@diagnostic disable-line
-            end
+            vim.api.nvim_buf_set_extmark(
+              bufnr,
+              usage_namespace,
+              arg.row,
+              arg.col,
+              {
+                id = arg.id,
+                end_row = arg.row,
+                end_col = arg.col + upto,
+                hl_group = arg.hl_group,
+              }
+            )
           end,
           vim.tbl_extend('keep', {
             int = true,
-            id = 'local_highlight_' .. bufnr .. '_' .. i,
+            id = 'local_highlight_' .. bufnr .. '_' .. hash,
             buf = bufnr,
-            first_time = true,
           }, M.config.animate)
         )
       else
-        vim_hl.range(unpack(arg))
+        vim_hl.range(
+          bufnr,
+          usage_namespace,
+          arg.hl_group,
+          {arg.row, arg.col},
+          {arg.row, arg.col + curpattern_len},
+          {}
+        )
       end
-      M.last_count[bufnr] = #args
+      M.last_count[bufnr] = #current_cache
     end
   end
 

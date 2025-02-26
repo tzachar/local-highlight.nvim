@@ -1,6 +1,6 @@
 # local-highlight.nvim
 
-Using regexes and `vim.hl.range()` to highlight uses of the word under the cursor.
+Using regexes and `extmarks` to highlight uses of the word under the cursor.
 Keeps updates local to currently visible lines, thus enabling blazingly fast performance.
 
 # In Action
@@ -33,7 +33,7 @@ documented below.
 In my initial search for a plugin of this kind, I found myself consistently frustrated. Nothing I encountered truly satisfied my need for both high performance and formatting options. This plugin, however, excels in the following:
 
 * Exceptional Performance, even on large files.
-* Highlight mechanics: by using `vim.hl`, the current format of each highlighted word remains the same (e.g., italics, treesitter highlights)
+* Highlight mechanics: by using `extmarks`, the current format of each highlighted word remains the same (e.g., italics, treesitter highlights)
 * By being implemented programmatically in `lua`, this plugin can support
   animations.
 
