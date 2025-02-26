@@ -2,7 +2,6 @@
 -- definition on cursor hold.
 
 local api = vim.api
-local vim_hl = (vim.hl or vim.highlight)
 
 local M = {
   regexes = {
@@ -20,7 +19,6 @@ local M = {
     highlight_single_match = true,
     animate = {
       enabled = true,
-      char_by_char = true,
       easing = 'linear',
       duration = {
         step = 10, -- ms per step
@@ -89,11 +87,13 @@ function M.highlight_usages(bufnr)
   local line = vim.fn.getline('.')
   if string.sub(line, cursor[2] + 1, cursor[2] + 1) == ' ' then
     M.clear_usage_highlights(bufnr)
+    M.last_cache[bufnr] = nil
     return
   end
   local curword, curword_start, curword_end = unpack(vim.fn.matchstrpos(line, [[\k*\%]] .. cursor[2] + 1 .. [[c\k*]]))
   if not curword or #curword < M.config.min_match_len or #curword > M.config.max_match_len then
     M.clear_usage_highlights(bufnr)
+    M.last_cache[bufnr] = nil
     return
   end
   local topline, botline = vim.fn.line('w0') - 1, vim.fn.line('w$')
@@ -128,18 +128,25 @@ function M.highlight_usages(bufnr)
     return
   end
 
-  M.clear_usage_highlights(bufnr)
+  -- if this is a new word, remove all previous highlights
+  if prev_cache == nil then
+    M.clear_usage_highlights(bufnr)
+  end
 
   local total_matches = 0
+  local to_phase_out = {}
+  local to_phase_in = {}
   for row = topline, botline - 1 do
     local matches = all_matches(bufnr, regex, row)
     for _, col in ipairs(matches) do
       total_matches = total_matches + 1
       local hash = row .. '_' .. col
-      local hl_group = (
-        (row ~= cursor_range[1] or cursor_range[2] < col or cursor_range[2] > col + curpattern_len) and M.config.hlgroup
-      ) or M.config.cw_hlgroup
-      local id = (prev_cache and prev_cache.matches[hash] and prev_cache.matches[hash].id) or vim.api.nvim_buf_set_extmark(
+      local is_curword = (row == cursor_range[1] and cursor_range[2] >= col and cursor_range[2] <= col + curpattern_len)
+      local hl_group = M.config.hlgroup
+      if is_curword then
+        hl_group = M.config.cw_hlgroup
+      end
+      local id = (prev_cache and prev_cache.matches[hash] and prev_cache.matches[hash].id) or api.nvim_buf_set_extmark(
         bufnr,
         usage_namespace,
         row,
@@ -158,58 +165,102 @@ function M.highlight_usages(bufnr)
         row = row,
         col = col,
         hl_group = hl_group,
+        is_curword = is_curword
       }
+      if is_curword and prev_cache and M.config.cw_hlgroup == nil then
+        to_phase_out[hash] = true
+      elseif prev_cache
+        and prev_cache.matches[hash]
+        and prev_cache.matches[hash].is_curword then
+        to_phase_in[hash] = true
+      elseif prev_cache and prev_cache.matches[hash] then
+        -- skip
+      else
+      -- and all others which are new
+        to_phase_in[hash] = true
+      end
     end
   end
 
-  if M.config.highlight_single_match or total_matches > 1 then
-    for hash, arg in pairs(current_cache.matches) do
-      if M.config.animate and M.config.animate.enabled and require('snacks.animate').enabled({ buf = bufnr, name = 'local_highlight' }) then
-        require('snacks.animate')(
-          0,
-          100,
-          function(value, ctx) ---@diagnostic disable-line
-            local upto = curpattern_len
-            if M.config.animate.char_by_char then
-              upto = math.floor(value * curpattern_len / 100. + 0.5)
-              upto = math.max(1, upto)
+  if not M.config.highlight_single_match and total_matches <= 1 then
+    return
+  end
+
+  if M.config.animate
+    and M.config.animate.enabled
+    and require('snacks.animate').enabled({ buf = bufnr, name = 'local_highlight' })
+    then
+      require('snacks.animate')(
+        0,
+        100,
+        function(value, ctx) ---@diagnostic disable-line
+          local upto = curpattern_len
+          upto = math.floor(value * curpattern_len / 100. + 0.5)
+          upto = math.max(1, upto)
+          for hash, arg in pairs(current_cache.matches) do
+            if to_phase_in[hash] then
+              api.nvim_buf_set_extmark(
+                bufnr,
+                usage_namespace,
+                arg.row,
+                arg.col,
+                {
+                  id = arg.id,
+                  end_row = arg.row,
+                  end_col = arg.col + upto,
+                  hl_group = arg.hl_group,
+                  strict = false,
+                }
+              )
+            elseif to_phase_out[hash] then
+              api.nvim_buf_set_extmark(
+                bufnr,
+                usage_namespace,
+                arg.row,
+                arg.col,
+                {
+                  id = arg.id,
+                  end_row = arg.row,
+                  end_col = arg.col + curpattern_len - upto,
+                  hl_group = arg.hl_group,
+                  strict = false,
+                }
+              )
             end
-            vim.api.nvim_buf_set_extmark(
-              bufnr,
-              usage_namespace,
-              arg.row,
-              arg.col,
-              {
-                id = arg.id,
-                end_row = arg.row,
-                end_col = arg.col + upto,
-                hl_group = arg.hl_group,
-              }
-            )
-          end,
-          vim.tbl_extend('keep', {
-            int = true,
-            id = 'local_highlight_' .. bufnr .. '_' .. hash,
-            buf = bufnr,
-          }, M.config.animate)
-        )
-      else
-        vim_hl.range(
+          end
+        end,
+        vim.tbl_extend('keep', {
+          int = true,
+          id = 'local_highlight_' .. bufnr,
+          buf = bufnr,
+          duration = {
+            step = M.config.animate.duration.step,
+            total = math.min(M.config.animate.duration.total, curpattern_len * M.config.animate.duration.step),
+          },
+        }, M.config.animate)
+      )
+    else
+      for _, arg in pairs(current_cache.matches) do
+        api.nvim_buf_set_extmark(
           bufnr,
           usage_namespace,
-          arg.hl_group,
-          {arg.row, arg.col},
-          {arg.row, arg.col + curpattern_len},
-          {}
+          arg.row,
+          arg.col,
+          {
+            id = arg.id,
+            end_row = arg.row,
+            end_col = arg.col + curpattern_len,
+            hl_group = arg.hl_group,
+            strict = false,
+          }
         )
       end
-      M.last_count[bufnr] = #current_cache
     end
-  end
+  M.last_count[bufnr] = #current_cache
 
   local time_since_start = vim.fn.reltimefloat(vim.fn.reltime(start_time)) * 1000
   if M.debug_print_usage_every_time then
-    vim.api.nvim_echo({ { string.format('LH: %f', time_since_start) } }, false, {})
+    api.nvim_echo({ { string.format('LH: %f', time_since_start) } }, false, {})
   end
   table.insert(M.timing_info, time_since_start)
   M.usage_count = M.usage_count + 1
@@ -295,7 +346,7 @@ function M.detach(bufnr)
 end
 
 local function setup_highlight_group()
-  vim.api.nvim_set_hl(0, 'LocalHighlight', {
+  api.nvim_set_hl(0, 'LocalHighlight', {
     fg = '#dcd7ba',
     bg = '#2d4f67',
     default = true,
@@ -304,13 +355,13 @@ end
 
 function M.setup(config)
   setup_highlight_group()
-  vim.api.nvim_create_autocmd('ColorScheme', {
+  api.nvim_create_autocmd('ColorScheme', {
     pattern = '*',
     callback = setup_highlight_group,
   })
 
   M.config = vim.tbl_deep_extend('keep', config or {}, M.config)
-  local background = vim.api.nvim_get_hl(0, {
+  local background = api.nvim_get_hl(0, {
     create = false,
     name = 'Normal',
   })
@@ -319,7 +370,7 @@ function M.setup(config)
   else
     M.config.background = '000000'
   end
-  local animate_bg = vim.api.nvim_get_hl(0, {
+  local animate_bg = api.nvim_get_hl(0, {
     create = false,
     name = M.config.hlgroup,
   })
@@ -350,7 +401,7 @@ function M.setup(config)
   end
   local au = api.nvim_create_augroup('Highlight_usages_in_window', { clear = true })
   if M.config.file_types and #M.config.file_types > 0 then
-    vim.api.nvim_create_autocmd('FileType', {
+    api.nvim_create_autocmd('FileType', {
       group = au,
       pattern = M.config.file_types,
       callback = function(data)
@@ -358,7 +409,7 @@ function M.setup(config)
       end,
     })
   elseif M.config.file_types == nil then
-    vim.api.nvim_create_autocmd('BufRead', {
+    api.nvim_create_autocmd('BufRead', {
       group = au,
       pattern = '*.*',
       callback = function(data)
@@ -373,13 +424,13 @@ function M.setup(config)
   end
 
   --- add togglecommands
-  vim.api.nvim_create_user_command('LocalHighlightOff', function()
+  api.nvim_create_user_command('LocalHighlightOff', function()
     M.detach(vim.fn.bufnr('%'))
   end, { desc = 'Turn local-highligh.nvim off' })
-  vim.api.nvim_create_user_command('LocalHighlightOn', function()
+  api.nvim_create_user_command('LocalHighlightOn', function()
     M.attach(vim.fn.bufnr('%'))
   end, { desc = 'Turn local-highligh.nvim on' })
-  vim.api.nvim_create_user_command('LocalHighlightToggle', function()
+  api.nvim_create_user_command('LocalHighlightToggle', function()
     local bufnr = vim.fn.bufnr('%')
     if M.is_attached(bufnr) then
       M.detach(bufnr)
@@ -388,8 +439,8 @@ function M.setup(config)
     end
   end, { desc = 'Toggle local-highligh.nvim' })
 
-  vim.api.nvim_create_user_command('LocalHighlightStats', function()
-    vim.api.nvim_echo({ { M.stats() } }, false, {})
+  api.nvim_create_user_command('LocalHighlightStats', function()
+    api.nvim_echo({ { M.stats() } }, false, {})
   end, { force = true })
 end
 

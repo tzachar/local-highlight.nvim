@@ -63,7 +63,6 @@ require('local-highlight').setup({
     highlight_single_match = true,
     animate = {
       enabled = true,
-      char_by_char = true,
       easing = "linear",
       duration = {
         step = 10, -- ms per step
@@ -128,11 +127,6 @@ are using at least `nvim-0.10`, `local-highligh` will use `Snacks.animate` by de
 
 To disable animation regardless of `snacks`, just set `enabled = false`. All
 other arguments are the same as for `Snacks.animate`.
-
-### `char_by_char`
-
-By default, animation is done charachter by character. Set to `false` to animate
-the entire word as a whole.
 
 ## API
 
