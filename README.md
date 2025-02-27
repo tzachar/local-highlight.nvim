@@ -1,6 +1,6 @@
 # local-highlight.nvim
 
-Using regexes and `vim.hl.range()` to highlight uses of the word under the cursor.
+Using regexes and `extmarks` to highlight uses of the word under the cursor.
 Keeps updates local to currently visible lines, thus enabling blazingly fast performance.
 
 # In Action
@@ -33,7 +33,7 @@ documented below.
 In my initial search for a plugin of this kind, I found myself consistently frustrated. Nothing I encountered truly satisfied my need for both high performance and formatting options. This plugin, however, excels in the following:
 
 * Exceptional Performance, even on large files.
-* Highlight mechanics: by using `vim.hl`, the current format of each highlighted word remains the same (e.g., italics, treesitter highlights)
+* Highlight mechanics: by using `extmarks`, the current format of each highlighted word remains the same (e.g., italics, treesitter highlights)
 * By being implemented programmatically in `lua`, this plugin can support
   animations.
 
@@ -63,7 +63,6 @@ require('local-highlight').setup({
     highlight_single_match = true,
     animate = {
       enabled = true,
-      char_by_char = true,
       easing = "linear",
       duration = {
         step = 10, -- ms per step
@@ -128,11 +127,6 @@ are using at least `nvim-0.10`, `local-highligh` will use `Snacks.animate` by de
 
 To disable animation regardless of `snacks`, just set `enabled = false`. All
 other arguments are the same as for `Snacks.animate`.
-
-### `char_by_char`
-
-By default, animation is done charachter by character. Set to `false` to animate
-the entire word as a whole.
 
 ## API
 
