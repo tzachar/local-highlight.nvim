@@ -213,19 +213,23 @@ function M.highlight_usages(bufnr)
                 }
               )
             elseif to_phase_out[hash] then
-              api.nvim_buf_set_extmark(
-                bufnr,
-                usage_namespace,
-                arg.row,
-                arg.col,
-                {
-                  id = arg.id,
-                  end_row = arg.row,
-                  end_col = arg.col + curpattern_len - upto,
-                  hl_group = arg.hl_group,
-                  strict = false,
-                }
-              )
+              if curpattern_len - upto <= 1 then
+                api.nvim_buf_del_extmark(bufnr, usage_namespace, arg.id)
+              else
+                api.nvim_buf_set_extmark(
+                  bufnr,
+                  usage_namespace,
+                  arg.row,
+                  arg.col,
+                  {
+                    id = arg.id,
+                    end_row = arg.row,
+                    end_col = arg.col + curpattern_len - upto,
+                    hl_group = arg.hl_group,
+                    strict = false,
+                  }
+                )
+              end
             end
           end
         end,
