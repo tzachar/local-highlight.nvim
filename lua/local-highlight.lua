@@ -41,11 +41,11 @@ local function all_matches(bufnr, regex, line)
   local ans = {}
   local offset = 0
   while true do
-    local s, e = regex:match_line(bufnr, line, offset)
-    if not s then
+    local s, ss, e = pcall(regex.match_line, regex, bufnr, line, offset)
+    if not s or not ss then
       return ans
     end
-    table.insert(ans, s + offset)
+    table.insert(ans, ss + offset)
     offset = offset + e
   end
 end
