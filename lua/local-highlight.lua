@@ -86,19 +86,13 @@ function M.highlight_usages(bufnr)
   local cursor = api.nvim_win_get_cursor(0)
   local line = vim.fn.getline('.')
   if string.sub(line, cursor[2] + 1, cursor[2] + 1) == ' ' then
-    M.clear_highlights(
-      bufnr,
-      M.last_cache[bufnr]
-    )
+    M.clear_highlights(bufnr, M.last_cache[bufnr])
     M.last_cache[bufnr] = nil
     return
   end
   local curword, curword_start, curword_end = unpack(vim.fn.matchstrpos(line, [[\k*\%]] .. cursor[2] + 1 .. [[c\k*]]))
   if not curword or #curword < M.config.min_match_len or #curword > M.config.max_match_len then
-    M.clear_highlights(
-      bufnr,
-      M.last_cache[bufnr]
-    )
+    M.clear_highlights(bufnr, M.last_cache[bufnr])
     M.last_cache[bufnr] = nil
     return
   end
@@ -116,14 +110,14 @@ function M.highlight_usages(bufnr)
       row = cursor[1],
       col_start = curword_start,
       col_end = curword_end,
-      matches = {}
+      matches = {},
     }
     if prev_cache and curword == prev_cache.curword then
       is_new_curword = true
     end
   end
 
-  local current_cache =  M.last_cache[bufnr]
+  local current_cache = M.last_cache[bufnr]
 
   -- dumb find all matches of the word
   -- matching whole word ('\<' and '\>')
@@ -137,10 +131,7 @@ function M.highlight_usages(bufnr)
 
   -- if this is a new word, phase out all previous matches
   if prev_cache and not is_new_curword then
-    M.clear_highlights(
-      bufnr,
-      prev_cache
-    )
+    M.clear_highlights(bufnr, prev_cache)
     prev_cache = nil
   end
 
@@ -157,37 +148,29 @@ function M.highlight_usages(bufnr)
       if is_curword then
         hl_group = M.config.cw_hlgroup
       end
-      local id = (prev_cache and prev_cache.matches[hash] and prev_cache.matches[hash].id) or api.nvim_buf_set_extmark(
-        bufnr,
-        usage_namespace,
-        row,
-        col,
-        {
-          end_row = row,
-          end_col = col + 1,
-          hl_group = hl_group,
-          priority = 200,
-          strict = false,
-        }
-      )
+      local id = (prev_cache and prev_cache.matches[hash] and prev_cache.matches[hash].id) or api.nvim_buf_set_extmark(bufnr, usage_namespace, row, col, {
+        end_row = row,
+        end_col = col + 1,
+        hl_group = hl_group,
+        priority = 200,
+        strict = false,
+      })
       current_cache.matches[hash] = {
         id = id,
         len = curpattern_len,
         row = row,
         col = col,
         hl_group = hl_group,
-        is_curword = is_curword
+        is_curword = is_curword,
       }
       if is_curword and prev_cache and M.config.cw_hlgroup == nil then
         to_phase_out[hash] = current_cache.matches[hash]
-      elseif prev_cache
-        and prev_cache.matches[hash]
-        and prev_cache.matches[hash].is_curword then
+      elseif prev_cache and prev_cache.matches[hash] and prev_cache.matches[hash].is_curword then
         to_phase_in[hash] = current_cache.matches[hash]
       elseif prev_cache and prev_cache.matches[hash] then
         -- skip
       else
-      -- and all others which are new
+        -- and all others which are new
         to_phase_in[hash] = current_cache.matches[hash]
       end
     end
@@ -202,19 +185,13 @@ function M.highlight_usages(bufnr)
     M.phase_in_matches(bufnr, to_phase_in, curpattern_len)
   else
     for _, arg in pairs(current_cache.matches) do
-      api.nvim_buf_set_extmark(
-        bufnr,
-        usage_namespace,
-        arg.row,
-        arg.col,
-        {
-          id = arg.id,
-          end_row = arg.row,
-          end_col = arg.col + curpattern_len,
-          hl_group = arg.hl_group,
-          strict = false,
-        }
-      )
+      api.nvim_buf_set_extmark(bufnr, usage_namespace, arg.row, arg.col, {
+        id = arg.id,
+        end_row = arg.row,
+        end_col = arg.col + curpattern_len,
+        hl_group = arg.hl_group,
+        strict = false,
+      })
     end
   end
   M.last_count[bufnr] = #current_cache
@@ -239,9 +216,7 @@ function M.has_highlights(bufnr)
 end
 
 function M.animation_enabled(bufnr)
-    return M.config.animate
-      and M.config.animate.enabled
-      and require('snacks.animate').enabled({ buf = bufnr, name = 'local_highlight' })
+  return M.config.animate and M.config.animate.enabled and require('snacks.animate').enabled({ buf = bufnr, name = 'local_highlight' })
 end
 
 function M.phase_in_matches(bufnr, matches, prev_word_len)
@@ -252,19 +227,13 @@ function M.phase_in_matches(bufnr, matches, prev_word_len)
       local upto = math.floor(value * prev_word_len / 100.)
       upto = math.max(1, upto)
       for _, arg in pairs(matches) do
-        api.nvim_buf_set_extmark(
-          bufnr,
-          usage_namespace,
-          arg.row,
-          arg.col,
-          {
-            id = arg.id,
-            end_row = arg.row,
-            end_col = arg.col + upto,
-            hl_group = arg.hl_group,
-            strict = false,
-          }
-        )
+        api.nvim_buf_set_extmark(bufnr, usage_namespace, arg.row, arg.col, {
+          id = arg.id,
+          end_row = arg.row,
+          end_col = arg.col + upto,
+          hl_group = arg.hl_group,
+          strict = false,
+        })
       end
     end,
     vim.tbl_extend('keep', {
@@ -290,19 +259,13 @@ function M.phase_out_matches(bufnr, matches, prev_word_len)
         if prev_word_len - upto <= 1 then
           api.nvim_buf_del_extmark(bufnr, usage_namespace, arg.id)
         else
-          api.nvim_buf_set_extmark(
-            bufnr,
-            usage_namespace,
-            arg.row,
-            arg.col,
-            {
-              id = arg.id,
-              end_row = arg.row,
-              end_col = arg.col + prev_word_len - upto,
-              hl_group = arg.hl_group,
-              strict = false,
-            }
-          )
+          api.nvim_buf_set_extmark(bufnr, usage_namespace, arg.row, arg.col, {
+            id = arg.id,
+            end_row = arg.row,
+            end_col = arg.col + prev_word_len - upto,
+            hl_group = arg.hl_group,
+            strict = false,
+          })
         end
       end
     end,
@@ -370,10 +333,7 @@ function M.attach(bufnr)
       group = au,
       buffer = bufnr,
       callback = function()
-        M.clear_highlights(
-          bufnr,
-          M.last_cache[bufnr]
-        )
+        M.clear_highlights(bufnr, M.last_cache[bufnr])
         M.last_cache[bufnr] = nil
       end,
     })
@@ -382,10 +342,7 @@ function M.attach(bufnr)
     group = au,
     buffer = bufnr,
     callback = function()
-      M.clear_highlights(
-        bufnr,
-        M.last_cache[bufnr]
-      )
+      M.clear_highlights(bufnr, M.last_cache[bufnr])
       M.last_cache[bufnr] = nil
       M.detach(bufnr)
     end,
@@ -393,10 +350,7 @@ function M.attach(bufnr)
 end
 
 function M.detach(bufnr)
-  M.clear_highlights(
-    bufnr,
-    M.last_cache[bufnr]
-  )
+  M.clear_highlights(bufnr, M.last_cache[bufnr])
   M.last_cache[bufnr] = nil
   api.nvim_del_augroup_by_name(M.buf_au_group_name(bufnr))
 end
