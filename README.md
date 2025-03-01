@@ -86,10 +86,10 @@ Specify the highlighting group to use for the word under the cursor. Defaults to
 
 ## `debounce_timeout`
 
-The number of milliseconds to wait after a `CursorMoved` event fires to start
-the highlighting process. The default is `200`, meaning that we will only start
-highligting `200` milliseconds after the last `CursorMoved` event (last meaning
-all other events were less than `200` milliseconds apart).
+The number of milliseconds to wait after the last `CursorMoved` event fires before
+refreshing highlights. The default is `200`, meaning that highlights will be updated
+after the cursor has remained stationary for `200` milliseconds. Set to `0` to
+refresh highlights on every `CursorMoved` event, with no delay.
 
 ## `file_types` and `disable_file_types`
 
