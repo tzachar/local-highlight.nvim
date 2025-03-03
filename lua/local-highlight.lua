@@ -25,13 +25,13 @@ local M = {
         total = 100, -- maximum duration
       },
     },
+    debounce_timeout = 200,
   },
   timing_info = {},
   usage_count = 0,
   debug_print_usage_every_time = false,
   last_cache = {},
   last_count = {},
-  debounce_timeout = 200,
   debounce_timer = nil,
 }
 
@@ -313,16 +313,20 @@ function M.attach(bufnr)
     group = au,
     buffer = bufnr,
     callback = function()
-      if M.debounce_timer then
-        M.debounce_timer:stop()
-        M.debounce_timer:close()
-      end
-      M.debounce_timer = (vim.uv or vim.loop).new_timer()
-      M.debounce_timer:start(M.debounce_timeout, 0, function()
-        vim.schedule(function()
-          M.highlight_usages(bufnr)
+      if M.config.debounce_timeout == 0 then
+        M.highlight_usages(bufnr)
+      else
+        if M.debounce_timer then
+          M.debounce_timer:stop()
+          M.debounce_timer:close()
+        end
+        M.debounce_timer = (vim.uv or vim.loop).new_timer()
+        M.debounce_timer:start(M.config.debounce_timeout, 0, function()
+          vim.schedule(function()
+            M.highlight_usages(bufnr)
+          end)
         end)
-      end)
+      end
     end,
   }
   api.nvim_create_autocmd({ 'CursorMoved', 'WinScrolled' }, highlighter_args)
