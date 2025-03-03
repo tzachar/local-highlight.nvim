@@ -136,10 +136,10 @@ to`nil`, which means "Do not apply any highlighting".
 
 DEBOUNCE_TIMEOUT                      *local-highlight-setup-debounce_timeout*
 
-The number of milliseconds to wait after a `CursorMoved` event fires to
-startthe highlighting process. The default is `200`, meaning that we will only
-starthighligting `200` milliseconds after the last `CursorMoved` event (last
-meaningall other events were less than `200` milliseconds apart).
+The number of milliseconds to wait after the last `CursorMoved` event fires
+beforerefreshing highlights. The default is `200`, meaning that highlights will
+be updatedafter the cursor has remained stationary for `200` milliseconds. Set
+to `0` torefresh highlights on every `CursorMoved` event, with no delay.
 
 
 FILE_TYPES AND DISABLE_FILE_TYPES*local-highlight-setup-file_types-and-disable_file_types*
