@@ -177,6 +177,7 @@ function M.highlight_usages(bufnr)
   end
 
   if not M.config.highlight_single_match and total_matches <= 1 then
+    M.clear_highlights(bufnr, M.last_cache[bufnr])
     return
   end
 
