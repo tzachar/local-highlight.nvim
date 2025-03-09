@@ -225,6 +225,10 @@ function M.phase_in_matches(bufnr, matches, prev_word_len)
     0,
     100,
     function(value, ctx) ---@diagnostic disable-line
+      -- check that buffer is still valid
+      if not api.nvim_buf_is_valid(bufnr) then
+        return
+      end
       local upto = math.floor(value * prev_word_len / 100.)
       upto = math.max(1, upto)
       for _, arg in pairs(matches) do
@@ -254,6 +258,10 @@ function M.phase_out_matches(bufnr, matches, prev_word_len)
     0,
     100,
     function(value, ctx) ---@diagnostic disable-line
+      -- check that buffer is still valid
+      if not api.nvim_buf_is_valid(bufnr) then
+        return
+      end
       local upto = math.floor(value * prev_word_len / 100.)
       upto = math.max(1, upto)
       for _, arg in pairs(matches) do
@@ -343,7 +351,7 @@ function M.attach(bufnr)
       end,
     })
   end
-  api.nvim_create_autocmd({ 'BufDelete' }, {
+  api.nvim_create_autocmd({ 'BufUnload' }, {
     group = au,
     buffer = bufnr,
     callback = function()
