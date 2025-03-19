@@ -293,7 +293,7 @@ end
 function M.clear_highlights(bufnr, cache)
   if M.animation_enabled() and cache then
     M.phase_out_matches(bufnr, cache.matches, #cache.curword)
-  else
+  elseif api.nvim_buf_is_valid(bufnr) then
     api.nvim_buf_clear_namespace(bufnr, usage_namespace, 0, -1)
   end
   M.last_count[bufnr] = 0
