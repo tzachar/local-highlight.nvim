@@ -300,6 +300,9 @@ function M.clear_highlights(bufnr, cache)
 end
 
 function M.buf_au_group_name(bufnr)
+  if not bufnr or bufnr == 0 then
+    bufnr = vim.fn.bufnr('%')
+  end
   return string.format('Highlight_usages_in_window_%d', bufnr)
 end
 
@@ -360,6 +363,7 @@ function M.attach(bufnr)
       M.detach(bufnr)
     end,
   })
+  highlighter_args.callback()
 end
 
 function M.detach(bufnr)
