@@ -17,12 +17,12 @@ highlight-definitions which performs poorly on large files.
 Using Lazy:
 
 ```lua
-  {
-      'tzachar/local-highlight.nvim',
-      config = function()
-        require('local-highlight').setup()
-      end
-  },
+{
+    "tzachar/local-highlight.nvim",
+    opts = {
+      debounce_timeout = 0
+    }
+}
 ```
 
 Make sure to specify file types to attach to, or use the `attach` interface
