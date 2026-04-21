@@ -411,11 +411,11 @@ function M.setup(config)
   if M.config.animate and M.config.animate.enabled then
     local err = {}
     if not vim.fn.has('nvim-0.10') == 1 then
-      table.insert(err, 'local-highligh.nvim only supports animation on nvim-0.10 onwards')
+      table.insert(err, 'local-highlight.nvim only supports animation on nvim-0.10 onwards')
     end
 
     if not pcall(require, 'snacks.animate') then
-      table.insert(err, 'local-highligh.nvim only supports animation if snacks.nvim is installed')
+      table.insert(err, 'local-highlight.nvim only supports animation if snacks.nvim is installed')
     end
     if not vim.tbl_isempty(err) then
       M.config.animate = nil
@@ -453,10 +453,10 @@ function M.setup(config)
   --- add togglecommands
   api.nvim_create_user_command('LocalHighlightOff', function()
     M.detach(vim.fn.bufnr('%'))
-  end, { desc = 'Turn local-highligh.nvim off' })
+  end, { desc = 'Turn local-highlight.nvim off' })
   api.nvim_create_user_command('LocalHighlightOn', function()
     M.attach(vim.fn.bufnr('%'))
-  end, { desc = 'Turn local-highligh.nvim on' })
+  end, { desc = 'Turn local-highlight.nvim on' })
   api.nvim_create_user_command('LocalHighlightToggle', function()
     local bufnr = vim.fn.bufnr('%')
     if M.is_attached(bufnr) then
@@ -464,7 +464,7 @@ function M.setup(config)
     else
       M.attach(bufnr)
     end
-  end, { desc = 'Toggle local-highligh.nvim' })
+  end, { desc = 'Toggle local-highlight.nvim' })
 
   api.nvim_create_user_command('LocalHighlightStats', function()
     api.nvim_echo({ { M.stats() } }, false, {})

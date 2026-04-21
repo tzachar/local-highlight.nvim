@@ -120,7 +120,7 @@ Set to false to stop highlighting words that only appear once.
 ## `animate`
 
 If you have [snacks.nvim](https://github.com/folke/snacks.nvim) installed and
-are using at least `nvim-0.10`, `local-highligh` will use `Snacks.animate` by default. In this case, only the
+are using at least `nvim-0.10`, `local-highlight` will use `Snacks.animate` by default. In this case, only the
 **background** specified in `hlgroup` will be used.
 
 To disable animation regardless of `snacks`, just set `enabled = false`. All
