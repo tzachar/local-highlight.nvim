@@ -71,6 +71,16 @@ require('local-highlight').setup({
 })
 ```
 
+## `iskeyword`
+`local-highlight` uses `iskeyword` regex character group to find word under cursor.
+You can customize it independently for each language.
+Note that it is not a `local-highlight` setup argument.
+
+For functional languages with `'` in identifier names, as an example:
+```lua
+vim.bo.iskeyword = vim.bo.iskeyword .. ",'"
+```
+
 ## `hlgroup`
 
 Specify the highlighting group to use.
